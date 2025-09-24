@@ -16,6 +16,8 @@ from agents import get_agent_orchestrator
 from virtual_filesystem import get_context_manager
 from user_containers import container_manager
 from onboarding import onboarding_flow
+from automation_engine import get_automation_engine
+from health_concierge import get_health_concierge
 from whoop_integration import get_whoop_integration
 
 # Load environment variables
@@ -655,6 +657,116 @@ async def set_service_priority(request: Request, service_id: str, priority: str)
         raise HTTPException(status_code=404, detail="User container not found. Please complete onboarding first.")
     
     result = container.set_service_priority(service_id, priority)
+    return result
+
+# Managed Services & Automation Endpoints
+@app.get("/api/managed-services/status")
+async def get_managed_services_status(request: Request):
+    """Get managed services status and automation info"""
+    tenant_id = get_tenant_from_request(request)
+    automation_engine = get_automation_engine(tenant_id)
+    health_concierge = get_health_concierge(tenant_id)
+    
+    return {
+        "tenant_id": tenant_id,
+        "automation_status": automation_engine.get_automation_status(),
+        "concierge_summary": health_concierge.get_concierge_summary(),
+        "managed_services_active": True,
+        "last_updated": datetime.now().isoformat()
+    }
+
+@app.get("/api/managed-services/concierge")
+async def get_concierge_services(request: Request):
+    """Get available concierge services"""
+    tenant_id = get_tenant_from_request(request)
+    health_concierge = get_health_concierge(tenant_id)
+    
+    return {
+        "status": "success",
+        "available_services": health_concierge.get_available_services()
+    }
+
+@app.post("/api/managed-services/concierge/upgrade")
+async def upgrade_service_level(request: Request, new_level: str):
+    """Upgrade user's service level"""
+    tenant_id = get_tenant_from_request(request)
+    health_concierge = get_health_concierge(tenant_id)
+    
+    from health_concierge import ServiceLevel
+    try:
+        service_level = ServiceLevel(new_level)
+        result = health_concierge.upgrade_service_level(service_level)
+        return result
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid service level: {new_level}")
+
+@app.post("/api/managed-services/concierge/execute/{service_id}")
+async def execute_concierge_service(request: Request, service_id: str):
+    """Execute a concierge service"""
+    tenant_id = get_tenant_from_request(request)
+    health_concierge = get_health_concierge(tenant_id)
+    
+    data = await request.json()
+    context = data.get("context", {})
+    
+    result = await health_concierge.execute_concierge_service(service_id, context)
+    return result
+
+@app.post("/api/managed-services/concierge/assess")
+async def assess_health_status(request: Request):
+    """Assess current health status"""
+    tenant_id = get_tenant_from_request(request)
+    health_concierge = get_health_concierge(tenant_id)
+    
+    data = await request.json()
+    metrics = data.get("metrics", {})
+    
+    result = health_concierge.assess_health_status(metrics)
+    return result
+
+@app.get("/api/managed-services/automation/rules")
+async def get_automation_rules(request: Request):
+    """Get automation rules"""
+    tenant_id = get_tenant_from_request(request)
+    automation_engine = get_automation_engine(tenant_id)
+    
+    return {
+        "status": "success",
+        "rules": [rule.to_dict() for rule in automation_engine.rules.values()],
+        "total_rules": len(automation_engine.rules)
+    }
+
+@app.get("/api/managed-services/automation/workflows")
+async def get_automation_workflows(request: Request):
+    """Get automation workflows"""
+    tenant_id = get_tenant_from_request(request)
+    automation_engine = get_automation_engine(tenant_id)
+    
+    return {
+        "status": "success",
+        "workflows": [workflow.to_dict() for workflow in automation_engine.workflows.values()],
+        "total_workflows": len(automation_engine.workflows)
+    }
+
+@app.post("/api/managed-services/automation/trigger/{rule_id}")
+async def trigger_automation_rule(request: Request, rule_id: str):
+    """Trigger an automation rule"""
+    tenant_id = get_tenant_from_request(request)
+    automation_engine = get_automation_engine(tenant_id)
+    
+    data = await request.json()
+    trigger_data = data.get("trigger_data", {})
+    
+    result = await automation_engine.trigger_rule(rule_id, trigger_data)
+    return result
+
+@app.post("/api/managed-services/automation/execute/{workflow_id}")
+async def execute_automation_workflow(request: Request, workflow_id: str):
+    """Execute an automation workflow"""
+    tenant_id = get_tenant_from_request(request)
+    automation_engine = get_automation_engine(tenant_id)
+    
+    result = await automation_engine.execute_workflow(workflow_id)
     return result
 
 # Tenant-specific dashboard
