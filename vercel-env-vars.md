@@ -8,10 +8,11 @@ OPENAI_API_KEY=sk-your-openai-api-key-here
 ANTHROPIC_API_KEY=sk-ant-your-anthropic-api-key-here
 ```
 
-### 2. **GitHub OAuth** (for authentication)
+### 2. **User Container System** (no external auth required)
 ```
-GITHUB_CLIENT_ID=your-github-oauth-app-client-id
-GITHUB_CLIENT_SECRET=your-github-oauth-app-client-secret
+# No additional environment variables needed
+# Users are identified by subdomain (e.g., username.vibespan.ai)
+# Each user gets their own isolated container after onboarding
 ```
 
 ### 3. **WHOOP v2 Integration** (for real-time health data)

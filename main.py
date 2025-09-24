@@ -14,7 +14,8 @@ from fastapi import FastAPI, Request, Header, HTTPException, Query
 from fastapi.responses import HTMLResponse, PlainTextResponse, JSONResponse
 from agents import get_agent_orchestrator
 from virtual_filesystem import get_context_manager
-from auth import auth_manager
+from user_containers import container_manager
+from onboarding import onboarding_flow
 from whoop_integration import get_whoop_integration
 
 # Load environment variables
@@ -235,108 +236,80 @@ def get_tenant_from_request(request: Request) -> str:
     host = request.headers.get("host", "")
     return extract_tenant_from_host(host)
 
-def get_user_from_token(request: Request) -> Optional[Dict[str, Any]]:
-    """Extract user data from JWT token"""
-    auth_header = request.headers.get("authorization", "")
-    if not auth_header.startswith("Bearer "):
-        return None
-    
-    token = auth_header[7:]  # Remove "Bearer " prefix
-    return auth_manager.verify_jwt_token(token)
+def get_user_container(request: Request) -> Optional[Any]:
+    """Get user container from subdomain"""
+    tenant_id = get_tenant_from_request(request)
+    return container_manager.get_container(tenant_id)
 
-# Authentication endpoints
-@app.get("/auth/login")
-async def login():
-    """Initiate GitHub OAuth login"""
-    state = auth_manager.generate_state()
-    auth_url = auth_manager.get_github_auth_url(state)
-    
-    return {
-        "auth_url": auth_url,
-        "state": state,
-        "message": "Redirect to GitHub for authentication"
-    }
-
-@app.get("/auth/callback")
-async def auth_callback(code: str, state: str):
-    """Handle GitHub OAuth callback"""
-    # Exchange code for token
-    access_token = auth_manager.exchange_code_for_token(code)
-    if not access_token:
-        raise HTTPException(status_code=400, detail="Failed to exchange code for token")
-    
-    # Get user info
-    user_data = auth_manager.get_github_user_info(access_token)
-    if not user_data:
-        raise HTTPException(status_code=400, detail="Failed to get user information")
-    
-    # Create session
-    session = auth_manager.create_user_session(user_data)
-    
-    # Return success with redirect instructions
-    return {
-        "status": "success",
-        "message": f"Welcome {user_data['name']}! You can now access your dashboard.",
-        "session": session,
-        "redirect_url": session["dashboard_url"]
-    }
-
-@app.get("/auth/me")
-async def get_current_user(request: Request):
-    """Get current authenticated user"""
-    user = get_user_from_token(request)
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    return {
-        "user": user,
-        "authenticated": True,
-        "dashboard_url": f"https://{user['subdomain']}.vibespan.ai/dashboard"
-    }
-
-@app.post("/auth/logout")
-async def logout():
-    """Logout user (client-side token removal)"""
-    return {
-        "status": "success",
-        "message": "Logged out successfully. Please remove your token from client storage."
-    }
-
-# Onboarding endpoints
+# Comprehensive Onboarding System
 @app.get("/onboarding/start")
-async def start_onboarding(request: Request, tenant: Optional[str] = Query(None)):
-    """Start onboarding process for a tenant"""
-    tenant_id = tenant or get_tenant_from_request(request)
+async def start_onboarding(request: Request, user_id: Optional[str] = Query(None)):
+    """Start comprehensive onboarding process"""
+    tenant_id = user_id or get_tenant_from_request(request)
     
+    # Check if container already exists
+    existing_container = container_manager.get_container(tenant_id)
+    if existing_container:
+        return {
+            "status": "container_exists",
+            "message": f"Container for {tenant_id} already exists",
+            "dashboard_url": existing_container.get_container_info()["dashboard_url"]
+        }
+    
+    return onboarding_flow.start_onboarding(tenant_id)
+
+@app.get("/onboarding/health-goals")
+async def get_health_goals_options():
+    """Get available health goals for selection"""
     return {
-        "status": "onboarding_started",
-        "tenant_id": tenant_id,
-        "steps": [
-            "Welcome to Vibespan.ai!",
-            "Connect your health data sources",
-            "Set up your health goals",
-            "Configure your preferences",
-            "Start your health journey!"
-        ],
-        "current_step": 1,
-        "next_action": "Connect data sources"
+        "health_goals": onboarding_flow.get_health_goals_options(),
+        "message": "Select your health goals to personalize your experience"
     }
+
+@app.get("/onboarding/daily-goals")
+async def get_daily_goals_options():
+    """Get available daily goals for selection"""
+    return {
+        "daily_goals": onboarding_flow.get_daily_goals_options(),
+        "message": "Choose your daily habits for consistency tracking"
+    }
+
+@app.get("/onboarding/health-tools")
+async def get_health_tools_options():
+    """Get available health tools and devices"""
+    return {
+        "health_tools": onboarding_flow.get_health_tools_options(),
+        "message": "Select the health tools and devices you use"
+    }
+
+@app.get("/onboarding/templates")
+async def get_health_templates():
+    """Get available health templates"""
+    return {
+        "templates": onboarding_flow.get_health_templates(),
+        "message": "Choose a health template that matches your lifestyle"
+    }
+
+@app.post("/onboarding/step")
+async def process_onboarding_step(
+    request: Request,
+    step: str,
+    data: Dict[str, Any],
+    user_id: Optional[str] = Query(None)
+):
+    """Process a specific onboarding step"""
+    tenant_id = user_id or get_tenant_from_request(request)
+    return onboarding_flow.process_onboarding_step(tenant_id, step, data)
 
 @app.post("/onboarding/complete")
-async def complete_onboarding(tenant: Optional[str] = Query(None), data: Dict[str, Any] = None):
-    """Complete onboarding for a tenant"""
-    tenant_id = tenant or "default"
-    
-    # Initialize agent orchestrator for the tenant
-    orchestrator = get_agent_orchestrator(tenant_id)
-    
-    return {
-        "status": "onboarding_completed",
-        "tenant_id": tenant_id,
-        "message": f"Welcome to your personalized health journey, {tenant_id}!",
-        "agents_initialized": True,
-        "dashboard_url": f"https://{tenant_id}.vibespan.ai/dashboard"
-    }
+async def complete_onboarding(
+    request: Request,
+    data: Dict[str, Any],
+    user_id: Optional[str] = Query(None)
+):
+    """Complete the onboarding process"""
+    tenant_id = user_id or get_tenant_from_request(request)
+    return onboarding_flow.complete_onboarding(tenant_id)
 
 # Agent endpoints
 @app.get("/agents/status")
@@ -498,13 +471,16 @@ async def chat_with_llm(request: Request, message: str, context: Optional[str] =
 # Daily actions and consistency tracking
 @app.get("/api/daily-actions")
 async def get_daily_actions(request: Request):
-    """Get today's health actions and recommendations"""
-    tenant_id = get_tenant_from_request(request)
-    whoop_integration = get_whoop_integration(tenant_id)
+    """Get today's personalized health actions based on user container"""
+    container = get_user_container(request)
+    if not container:
+        raise HTTPException(status_code=404, detail="User container not found. Please complete onboarding first.")
+    
+    tenant_id = container.user_id
     context_manager = get_context_manager(tenant_id)
     
-    # Get daily summary
-    daily_summary = whoop_integration.get_daily_summary()
+    # Get personalized daily actions from container
+    personalized_actions = container.get_daily_actions()
     
     # Get recent insights and recommendations
     recent_insights = context_manager.get_recent_insights(5)
@@ -513,39 +489,15 @@ async def get_daily_actions(request: Request):
     return {
         "tenant_id": tenant_id,
         "date": datetime.now().strftime("%Y-%m-%d"),
-        "daily_summary": daily_summary,
+        "container_info": {
+            "health_goals": container.health_goals,
+            "health_tools": container.health_tools,
+            "agents_enabled": container.agents_enabled
+        },
         "insights": recent_insights,
         "recommendations": recent_recommendations,
-        "actions_today": [
-            {
-                "id": "check_recovery",
-                "title": "Check Recovery Score",
-                "description": "Review your WHOOP recovery data",
-                "completed": False,
-                "priority": "high"
-            },
-            {
-                "id": "review_sleep",
-                "title": "Review Sleep Quality",
-                "description": "Analyze last night's sleep metrics",
-                "completed": False,
-                "priority": "high"
-            },
-            {
-                "id": "plan_workout",
-                "title": "Plan Today's Workout",
-                "description": "Based on recovery, plan your training",
-                "completed": False,
-                "priority": "medium"
-            },
-            {
-                "id": "hydration_check",
-                "title": "Hydration Check",
-                "description": "Ensure adequate water intake",
-                "completed": False,
-                "priority": "medium"
-            }
-        ]
+        "actions_today": personalized_actions,
+        "total_actions": len(personalized_actions)
     }
 
 @app.post("/api/daily-actions/{action_id}/complete")
@@ -592,6 +544,41 @@ async def get_consistency_streak(request: Request):
         "consistency_score": min(100, (total_actions * 10)),  # Simplified scoring
         "last_updated": datetime.now().isoformat()
     }
+
+# Container management endpoints
+@app.get("/api/container/info")
+async def get_container_info(request: Request):
+    """Get user container information"""
+    container = get_user_container(request)
+    if not container:
+        raise HTTPException(status_code=404, detail="User container not found. Please complete onboarding first.")
+    
+    return container.get_container_info()
+
+@app.get("/api/container/actions")
+async def get_container_actions(request: Request):
+    """Get personalized actions for user container"""
+    container = get_user_container(request)
+    if not container:
+        raise HTTPException(status_code=404, detail="User container not found. Please complete onboarding first.")
+    
+    return {
+        "container_id": container.container_id,
+        "user_id": container.user_id,
+        "personalized_actions": container.get_daily_actions(),
+        "templates_available": list(container.templates_loaded.keys()),
+        "agents_active": container.agents_enabled
+    }
+
+@app.post("/api/container/update-goals")
+async def update_container_goals(request: Request, goals_data: Dict[str, Any]):
+    """Update user goals and reconfigure container"""
+    container = get_user_container(request)
+    if not container:
+        raise HTTPException(status_code=404, detail="User container not found. Please complete onboarding first.")
+    
+    result = container.update_goals(goals_data)
+    return result
 
 # Tenant-specific dashboard
 @app.get("/dashboard")
