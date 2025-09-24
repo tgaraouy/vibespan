@@ -282,6 +282,34 @@ async def get_health_tools_options():
         "message": "Select the health tools and devices you use"
     }
 
+@app.get("/onboarding/service-catalog")
+async def get_service_catalog():
+    """Get comprehensive service catalog"""
+    return {
+        "status": "success",
+        "service_catalog": onboarding_flow.get_service_catalog()
+    }
+
+@app.get("/onboarding/hybrid-templates")
+async def get_hybrid_templates():
+    """Get hybrid template combinations"""
+    return {
+        "status": "success",
+        "hybrid_templates": onboarding_flow.get_hybrid_templates()
+    }
+
+@app.post("/onboarding/service-recommendations")
+async def get_service_recommendations(request: Request):
+    """Get service recommendations based on goals and tools"""
+    data = await request.json()
+    health_goals = data.get("health_goals", [])
+    health_tools = data.get("health_tools", [])
+    
+    return {
+        "status": "success",
+        "recommendations": onboarding_flow.get_service_recommendations(health_goals, health_tools)
+    }
+
 @app.get("/onboarding/templates")
 async def get_health_templates():
     """Get available health templates"""
@@ -578,6 +606,55 @@ async def update_container_goals(request: Request, goals_data: Dict[str, Any]):
         raise HTTPException(status_code=404, detail="User container not found. Please complete onboarding first.")
     
     result = container.update_goals(goals_data)
+    return result
+
+@app.get("/api/container/services")
+async def get_container_services(request: Request):
+    """Get container service status and configuration"""
+    container = get_user_container(request)
+    if not container:
+        raise HTTPException(status_code=404, detail="User container not found. Please complete onboarding first.")
+    
+    return container.get_service_status()
+
+@app.put("/api/container/services/configure")
+async def configure_container_services(request: Request, service_config: Dict[str, Any]):
+    """Configure container services with granular control"""
+    container = get_user_container(request)
+    if not container:
+        raise HTTPException(status_code=404, detail="User container not found. Please complete onboarding first.")
+    
+    result = container.update_service_configuration(service_config)
+    return result
+
+@app.post("/api/container/services/{service_id}/enable")
+async def enable_service(request: Request, service_id: str, priority: str = "medium"):
+    """Enable a specific service"""
+    container = get_user_container(request)
+    if not container:
+        raise HTTPException(status_code=404, detail="User container not found. Please complete onboarding first.")
+    
+    result = container.enable_service(service_id, priority)
+    return result
+
+@app.post("/api/container/services/{service_id}/disable")
+async def disable_service(request: Request, service_id: str):
+    """Disable a specific service"""
+    container = get_user_container(request)
+    if not container:
+        raise HTTPException(status_code=404, detail="User container not found. Please complete onboarding first.")
+    
+    result = container.disable_service(service_id)
+    return result
+
+@app.put("/api/container/services/{service_id}/priority")
+async def set_service_priority(request: Request, service_id: str, priority: str):
+    """Set priority for a specific service"""
+    container = get_user_container(request)
+    if not container:
+        raise HTTPException(status_code=404, detail="User container not found. Please complete onboarding first.")
+    
+    result = container.set_service_priority(service_id, priority)
     return result
 
 # Tenant-specific dashboard

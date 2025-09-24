@@ -9,6 +9,7 @@ import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from user_containers import container_manager, HEALTH_TEMPLATES
+from service_catalog import service_catalog
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ class OnboardingFlow:
             "health_goals", 
             "daily_goals",
             "health_tools",
+            "service_configuration",
             "data_preferences",
             "template_selection",
             "container_provisioning",
@@ -205,6 +207,66 @@ class OnboardingFlow:
         """Get available health templates"""
         return HEALTH_TEMPLATES
     
+    def get_service_catalog(self) -> Dict[str, Any]:
+        """Get comprehensive service catalog"""
+        return service_catalog.get_all_services()
+    
+    def get_hybrid_templates(self) -> Dict[str, Any]:
+        """Get hybrid template combinations"""
+        return service_catalog.get_hybrid_templates()
+    
+    def get_service_recommendations(self, health_goals: List[str], health_tools: List[str]) -> Dict[str, Any]:
+        """Get service recommendations based on user goals and tools"""
+        recommendations = {
+            "essential_services": [],
+            "recommended_services": [],
+            "optional_services": []
+        }
+        
+        # Essential services for everyone
+        recommendations["essential_services"] = [
+            "recovery_tracking",
+            "health_coaching", 
+            "safety_monitoring"
+        ]
+        
+        # Recommendations based on goals
+        if any("fitness" in goal.lower() for goal in health_goals):
+            recommendations["recommended_services"].extend([
+                "workout_planning",
+                "strength_tracking",
+                "performance_optimization"
+            ])
+        
+        if any("sleep" in goal.lower() or "recovery" in goal.lower() for goal in health_goals):
+            recommendations["recommended_services"].extend([
+                "sleep_optimization",
+                "stress_management"
+            ])
+        
+        if any("nutrition" in goal.lower() for goal in health_goals):
+            recommendations["recommended_services"].extend([
+                "nutrition_planning",
+                "hydration_tracking"
+            ])
+        
+        if any("longevity" in goal.lower() for goal in health_goals):
+            recommendations["recommended_services"].extend([
+                "longevity_tracking",
+                "biomarker_monitoring",
+                "lifestyle_optimization"
+            ])
+        
+        # Optional services based on tools
+        if len(health_tools) > 1:
+            recommendations["optional_services"].extend([
+                "pattern_detection",
+                "predictive_analytics",
+                "health_insights"
+            ])
+        
+        return recommendations
+    
     def process_onboarding_step(self, user_id: str, step: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Process a specific onboarding step"""
         if step == "health_goals":
@@ -213,6 +275,8 @@ class OnboardingFlow:
             return self._process_daily_goals(user_id, data)
         elif step == "health_tools":
             return self._process_health_tools(user_id, data)
+        elif step == "service_configuration":
+            return self._process_service_configuration(user_id, data)
         elif step == "template_selection":
             return self._process_template_selection(user_id, data)
         elif step == "container_provisioning":
@@ -260,8 +324,34 @@ class OnboardingFlow:
             "user_id": user_id,
             "selected_tools": selected_tools,
             "tools_count": len(selected_tools),
+            "next_step": "service_configuration",
+            "message": f"Perfect! {len(selected_tools)} health tools selected. Now let's configure your services."
+        }
+    
+    def _process_service_configuration(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Process service configuration step"""
+        service_config = data.get("service_configuration", {})
+        hybrid_template = data.get("hybrid_template")
+        
+        # If hybrid template is selected, apply it
+        if hybrid_template:
+            hybrid_templates = service_catalog.get_hybrid_templates()
+            if hybrid_template in hybrid_templates:
+                template_config = hybrid_templates[hybrid_template]["services"]
+                for service_id, priority in template_config.items():
+                    service_config[service_id] = {
+                        "enabled": priority != "disabled",
+                        "priority": priority,
+                        "custom_config": {}
+                    }
+        
+        return {
+            "status": "service_configuration_processed",
+            "user_id": user_id,
+            "service_configuration": service_config,
+            "hybrid_template": hybrid_template,
             "next_step": "template_selection",
-            "message": f"Perfect! {len(selected_tools)} health tools selected. Let's choose your health template."
+            "message": "Services configured. Now let's choose your health template."
         }
     
     def _process_template_selection(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:

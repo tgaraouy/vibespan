@@ -11,6 +11,7 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 import hashlib
 import secrets
+from service_catalog import service_catalog
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +33,13 @@ class UserContainer:
         self.health_tools = user_profile.get("health_tools", [])
         self.data_sources = user_profile.get("data_sources", [])
         self.preferences = user_profile.get("preferences", {})
+        self.service_configuration = user_profile.get("service_configuration", {})
         
         # Container state
         self.agents_enabled = self._determine_agents()
         self.templates_loaded = self._load_health_templates()
         self.data_collection_active = True
+        self.enabled_services = self._determine_enabled_services()
         
     def _generate_container_id(self) -> str:
         """Generate unique container ID"""
@@ -61,6 +64,73 @@ class UserContainer:
             base_agents.append("HealthCoach")
         
         return list(set(base_agents))  # Remove duplicates
+    
+    def _determine_enabled_services(self) -> Dict[str, Dict[str, Any]]:
+        """Determine enabled services based on user configuration"""
+        if self.service_configuration:
+            # Use custom service configuration
+            return self.service_configuration
+        
+        # Default service configuration based on goals and tools
+        enabled_services = {}
+        
+        # Always enable core services
+        core_services = ["recovery_tracking", "health_coaching", "safety_monitoring"]
+        for service_id in core_services:
+            enabled_services[service_id] = {
+                "enabled": True,
+                "priority": "high",
+                "custom_config": {}
+            }
+        
+        # Enable services based on health goals
+        if any("fitness" in goal.lower() or "exercise" in goal.lower() for goal in self.health_goals):
+            fitness_services = ["workout_planning", "strength_tracking", "performance_optimization"]
+            for service_id in fitness_services:
+                enabled_services[service_id] = {
+                    "enabled": True,
+                    "priority": "high",
+                    "custom_config": {}
+                }
+        
+        if any("sleep" in goal.lower() or "recovery" in goal.lower() for goal in self.health_goals):
+            sleep_services = ["sleep_optimization", "stress_management"]
+            for service_id in sleep_services:
+                enabled_services[service_id] = {
+                    "enabled": True,
+                    "priority": "high",
+                    "custom_config": {}
+                }
+        
+        if any("nutrition" in goal.lower() or "diet" in goal.lower() for goal in self.health_goals):
+            nutrition_services = ["nutrition_planning", "hydration_tracking", "supplement_optimization"]
+            for service_id in nutrition_services:
+                enabled_services[service_id] = {
+                    "enabled": True,
+                    "priority": "medium",
+                    "custom_config": {}
+                }
+        
+        if any("longevity" in goal.lower() or "optimization" in goal.lower() for goal in self.health_goals):
+            longevity_services = ["longevity_tracking", "biomarker_monitoring", "lifestyle_optimization"]
+            for service_id in longevity_services:
+                enabled_services[service_id] = {
+                    "enabled": True,
+                    "priority": "medium",
+                    "custom_config": {}
+                }
+        
+        # Enable analytics services if multiple tools are connected
+        if len(self.health_tools) > 1:
+            analytics_services = ["pattern_detection", "predictive_analytics", "health_insights"]
+            for service_id in analytics_services:
+                enabled_services[service_id] = {
+                    "enabled": True,
+                    "priority": "medium",
+                    "custom_config": {}
+                }
+        
+        return enabled_services
     
     def _load_health_templates(self) -> Dict[str, Any]:
         """Load health data collection templates based on user profile"""
@@ -135,6 +205,7 @@ class UserContainer:
             "agents_enabled": self.agents_enabled,
             "templates_loaded": list(self.templates_loaded.keys()),
             "data_collection_active": self.data_collection_active,
+            "enabled_services": self.enabled_services,
             "dashboard_url": f"https://{self.subdomain}.vibespan.ai/dashboard"
         }
     
@@ -156,6 +227,77 @@ class UserContainer:
             "container_id": self.container_id,
             "updated_at": datetime.now().isoformat(),
             "changes": list(new_goals.keys())
+        }
+    
+    def update_service_configuration(self, service_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Update service configuration with granular control"""
+        self.service_configuration = service_config
+        self.enabled_services = self._determine_enabled_services()
+        
+        # Update agents based on new service configuration
+        self.agents_enabled = self._determine_agents()
+        
+        return {
+            "status": "services_updated",
+            "container_id": self.container_id,
+            "updated_at": datetime.now().isoformat(),
+            "enabled_services": self.enabled_services,
+            "agents_enabled": self.agents_enabled
+        }
+    
+    def get_service_status(self) -> Dict[str, Any]:
+        """Get current service status and configuration"""
+        return {
+            "container_id": self.container_id,
+            "user_id": self.user_id,
+            "enabled_services": self.enabled_services,
+            "service_categories": service_catalog.categories,
+            "total_services": len(self.enabled_services),
+            "enabled_count": len([s for s in self.enabled_services.values() if s["enabled"]]),
+            "high_priority_count": len([s for s in self.enabled_services.values() if s.get("priority") == "high"])
+        }
+    
+    def enable_service(self, service_id: str, priority: str = "medium") -> Dict[str, Any]:
+        """Enable a specific service"""
+        if service_id not in self.enabled_services:
+            self.enabled_services[service_id] = {
+                "enabled": True,
+                "priority": priority,
+                "custom_config": {}
+            }
+        else:
+            self.enabled_services[service_id]["enabled"] = True
+            self.enabled_services[service_id]["priority"] = priority
+        
+        return {
+            "status": "service_enabled",
+            "service_id": service_id,
+            "priority": priority,
+            "updated_at": datetime.now().isoformat()
+        }
+    
+    def disable_service(self, service_id: str) -> Dict[str, Any]:
+        """Disable a specific service"""
+        if service_id in self.enabled_services:
+            self.enabled_services[service_id]["enabled"] = False
+            self.enabled_services[service_id]["priority"] = "disabled"
+        
+        return {
+            "status": "service_disabled",
+            "service_id": service_id,
+            "updated_at": datetime.now().isoformat()
+        }
+    
+    def set_service_priority(self, service_id: str, priority: str) -> Dict[str, Any]:
+        """Set priority for a specific service"""
+        if service_id in self.enabled_services:
+            self.enabled_services[service_id]["priority"] = priority
+        
+        return {
+            "status": "priority_updated",
+            "service_id": service_id,
+            "priority": priority,
+            "updated_at": datetime.now().isoformat()
         }
     
     def get_daily_actions(self) -> List[Dict[str, Any]]:
