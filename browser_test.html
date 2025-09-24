@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vibespan.ai Browser Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2980b9; }
+        .result { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #28a745; }
+        .error { border-left-color: #dc3545; }
+        .success { border-left-color: #28a745; }
+        .info { border-left-color: #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Vibespan.ai Browser Test</h1>
+        <p>Test your health agents for <strong>tgaraouy</strong> tenant</p>
+        
+        <div class="section">
+            <h3>🌐 Server Status</h3>
+            <button onclick="testServer()">Test Server Connection</button>
+            <div id="server-result"></div>
+        </div>
+        
+        <div class="section">
+            <h3>📊 Dashboard Test</h3>
+            <button onclick="testDashboard()">Test Dashboard</button>
+            <div id="dashboard-result"></div>
+        </div>
+        
+        <div class="section">
+            <h3>🤖 Agent Status</h3>
+            <button onclick="testAgentStatus()">Get Agent Status</button>
+            <div id="agent-status-result"></div>
+        </div>
+        
+        <div class="section">
+            <h3>🧠 Agent Processing</h3>
+            <button onclick="testAgentProcessing()">Test Agent Processing</button>
+            <div id="agent-processing-result"></div>
+        </div>
+        
+        <div class="section">
+            <h3>📈 Health Insights</h3>
+            <button onclick="testInsights()">Get Health Insights</button>
+            <div id="insights-result"></div>
+        </div>
+        
+        <div class="section">
+            <h3>🔗 Webhook Test</h3>
+            <button onclick="testWebhook()">Test Webhook</button>
+            <div id="webhook-result"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const HEADERS = {
+            'Content-Type': 'application/json',
+            'Host': 'tgaraouy.localhost:8000'
+        };
+        
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+        
+        async function testServer() {
+            try {
+                const response = await fetch(`${API_BASE}/`);
+                if (response.ok) {
+                    showResult('server-result', '✅ Server is running and accessible!', 'success');
+                } else {
+                    showResult('server-result', `❌ Server responded with status: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult('server-result', `❌ Cannot connect to server: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDashboard() {
+            try {
+                const response = await fetch(`${API_BASE}/dashboard`, {
+                    method: 'GET',
+                    headers: HEADERS
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('dashboard-result', `
+                        ✅ Dashboard accessible!<br>
+                        <strong>Tenant:</strong> ${data.tenant_id}<br>
+                        <strong>Subdomain:</strong> ${data.subdomain}<br>
+                        <strong>Status:</strong> ${data.status}<br>
+                        <strong>Active Agents:</strong> ${data.agents.length}<br>
+                        <strong>Data Sources:</strong> ${data.data_sources.length}
+                    `, 'success');
+                } else {
+                    showResult('dashboard-result', `❌ Error: ${data.detail}`, 'error');
+                }
+            } catch (error) {
+                showResult('dashboard-result', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAgentStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/agents/status`, {
+                    method: 'GET',
+                    headers: HEADERS
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const agentList = Object.keys(data.agents).join(', ');
+                    showResult('agent-status-result', `
+                        ✅ Agent status retrieved!<br>
+                        <strong>Total Agents:</strong> ${data.total_agents}<br>
+                        <strong>Active Agents:</strong> ${agentList}
+                    `, 'success');
+                } else {
+                    showResult('agent-status-result', `❌ Error: ${data.detail}`, 'error');
+                }
+            } catch (error) {
+                showResult('agent-status-result', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAgentProcessing() {
+            const sampleData = {
+                recovery_score: 78,
+                sleep_quality: 8.2,
+                hrv: 47,
+                heart_rate_resting: 62,
+                goals: ['performance', 'recovery'],
+                recent_trends: {
+                    sleep_improvement: true,
+                    hrv_decline: false
+                }
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/agents/process`, {
+                    method: 'POST',
+                    headers: HEADERS,
+                    body: JSON.stringify(sampleData)
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const insights = data.insights.slice(0, 3).join('<br>• ');
+                    showResult('agent-processing-result', `
+                        ✅ Agent processing successful!<br>
+                        <strong>Agents Processed:</strong> ${data.agents_processed.length}<br>
+                        <strong>Insights Generated:</strong> ${data.insights.length}<br>
+                        <strong>Recommendations:</strong> ${data.recommendations.length}<br>
+                        <strong>Sample Insights:</strong><br>
+                        • ${insights}
+                    `, 'success');
+                } else {
+                    showResult('agent-processing-result', `❌ Error: ${data.detail}`, 'error');
+                }
+            } catch (error) {
+                showResult('agent-processing-result', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testInsights() {
+            try {
+                const response = await fetch(`${API_BASE}/agents/insights`, {
+                    method: 'GET',
+                    headers: HEADERS
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('insights-result', `
+                        ✅ Health insights retrieved!<br>
+                        <strong>Latest Insights:</strong> ${data.latest_insights ? data.latest_insights.length : 0}<br>
+                        <strong>Recommendations:</strong> ${data.recommendations ? data.recommendations.length : 0}<br>
+                        <strong>Agents Used:</strong> ${data.agents_used ? data.agents_used.length : 0}
+                    `, 'success');
+                } else {
+                    showResult('insights-result', `❌ Error: ${data.detail}`, 'error');
+                }
+            } catch (error) {
+                showResult('insights-result', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testWebhook() {
+            const testData = {
+                test_metric: 75,
+                timestamp: new Date().toISOString(),
+                source: 'browser_test'
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/webhook/test/tgaraouy`, {
+                    method: 'POST',
+                    headers: HEADERS,
+                    body: JSON.stringify(testData)
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('webhook-result', `
+                        ✅ Webhook test successful!<br>
+                        <strong>Status:</strong> ${data.status}<br>
+                        <strong>Message:</strong> ${data.message}<br>
+                        <strong>Records Processed:</strong> ${data.result.records_processed}
+                    `, 'success');
+                } else {
+                    showResult('webhook-result', `❌ Error: ${data.detail}`, 'error');
+                }
+            } catch (error) {
+                showResult('webhook-result', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
