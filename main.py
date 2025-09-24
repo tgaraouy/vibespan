@@ -9,9 +9,11 @@ import hmac
 import hashlib
 import json
 from typing import Optional, Dict, Any
+from datetime import datetime
 from fastapi import FastAPI, Request, Header, HTTPException, Query
 from fastapi.responses import HTMLResponse, PlainTextResponse, JSONResponse
 from agents import get_agent_orchestrator
+from virtual_filesystem import get_context_manager
 
 # Load environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -19,6 +21,33 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+
+# LLM Integration
+def get_llm_client():
+    """Get LLM client based on available API keys"""
+    if OPENAI_API_KEY:
+        try:
+            from openai import OpenAI
+            return OpenAI(api_key=OPENAI_API_KEY), "openai"
+        except ImportError:
+            pass
+    
+    if ANTHROPIC_API_KEY:
+        try:
+            import anthropic
+            return anthropic.Anthropic(api_key=ANTHROPIC_API_KEY), "anthropic"
+        except ImportError:
+            pass
+    
+    return None, None
+
+def extract_tenant_from_host(host: str) -> str:
+    """Extract tenant ID from host header"""
+    if host.startswith("tgaraouy."):
+        return "tgaraouy"
+    elif "." in host and not host.startswith("www."):
+        return host.split(".")[0]
+    return "default"
 
 app = FastAPI(title="Vibespan.ai", version="1.0.0")
 
@@ -181,11 +210,17 @@ async def test_webhook(tenant_id: str, data: dict):
         "tenant_id": tenant_id
     }
 
+# Enhanced endpoints with proper tenant routing
+def get_tenant_from_request(request: Request) -> str:
+    """Extract tenant ID from request"""
+    host = request.headers.get("host", "")
+    return extract_tenant_from_host(host)
+
 # Onboarding endpoints
 @app.get("/onboarding/start")
-async def start_onboarding(tenant: Optional[str] = Query(None)):
+async def start_onboarding(request: Request, tenant: Optional[str] = Query(None)):
     """Start onboarding process for a tenant"""
-    tenant_id = tenant or "default"
+    tenant_id = tenant or get_tenant_from_request(request)
     
     return {
         "status": "onboarding_started",
@@ -265,11 +300,120 @@ async def get_agent_info(agent_name: str, tenant: Optional[str] = Query(None)):
         "status": "active"
     }
 
+# Enhanced UI and file system endpoints
+@app.get("/api/context/summary")
+async def get_context_summary(request: Request):
+    """Get context summary for tenant"""
+    tenant_id = get_tenant_from_request(request)
+    context_manager = get_context_manager(tenant_id)
+    return context_manager.get_context_summary()
+
+@app.get("/api/context/files")
+async def list_context_files(request: Request, category: Optional[str] = Query(None)):
+    """List files in virtual file system"""
+    tenant_id = get_tenant_from_request(request)
+    context_manager = get_context_manager(tenant_id)
+    files = context_manager.vfs.list_files(category)
+    return {
+        "tenant_id": tenant_id,
+        "category": category,
+        "files": files,
+        "total_files": len(files)
+    }
+
+@app.get("/api/context/insights")
+async def get_recent_insights(request: Request, limit: int = Query(10)):
+    """Get recent insights"""
+    tenant_id = get_tenant_from_request(request)
+    context_manager = get_context_manager(tenant_id)
+    insights = context_manager.get_recent_insights(limit)
+    return {
+        "tenant_id": tenant_id,
+        "insights": insights,
+        "count": len(insights)
+    }
+
+@app.get("/api/context/recommendations")
+async def get_recent_recommendations(request: Request, limit: int = Query(10)):
+    """Get recent recommendations"""
+    tenant_id = get_tenant_from_request(request)
+    context_manager = get_context_manager(tenant_id)
+    recommendations = context_manager.get_recent_recommendations(limit)
+    return {
+        "tenant_id": tenant_id,
+        "recommendations": recommendations,
+        "count": len(recommendations)
+    }
+
+@app.get("/api/context/agent-history")
+async def get_agent_history(request: Request, agent_name: Optional[str] = Query(None)):
+    """Get agent processing history"""
+    tenant_id = get_tenant_from_request(request)
+    context_manager = get_context_manager(tenant_id)
+    history = context_manager.get_agent_history(agent_name)
+    return {
+        "tenant_id": tenant_id,
+        "agent_name": agent_name,
+        "history": history,
+        "count": len(history)
+    }
+
+@app.post("/api/llm/chat")
+async def chat_with_llm(request: Request, message: str, context: Optional[str] = Query(None)):
+    """Chat with LLM for health insights"""
+    tenant_id = get_tenant_from_request(request)
+    
+    # Get LLM client
+    client, provider = get_llm_client()
+    if not client:
+        raise HTTPException(status_code=503, detail="LLM service not available")
+    
+    try:
+        if provider == "openai":
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": f"You are a health AI assistant for {tenant_id}. Provide personalized health insights and recommendations."},
+                    {"role": "user", "content": f"Context: {context or 'No specific context'}\n\nMessage: {message}"}
+                ],
+                max_tokens=500,
+                temperature=0.7
+            )
+            llm_response = response.choices[0].message.content
+        else:  # anthropic
+            response = client.messages.create(
+                model="claude-3-haiku-20240307",
+                max_tokens=500,
+                system=f"You are a health AI assistant for {tenant_id}. Provide personalized health insights and recommendations.",
+                messages=[{"role": "user", "content": f"Context: {context or 'No specific context'}\n\nMessage: {message}"}]
+            )
+            llm_response = response.content[0].text
+        
+        # Save conversation to context
+        context_manager = get_context_manager(tenant_id)
+        context_manager.vfs.write_file("conversations", f"chat_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json", {
+            "message": message,
+            "response": llm_response,
+            "context": context,
+            "provider": provider
+        })
+        
+        return {
+            "tenant_id": tenant_id,
+            "message": message,
+            "response": llm_response,
+            "provider": provider,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"LLM call failed: {str(e)}")
+
 # Tenant-specific dashboard
 @app.get("/dashboard")
-async def get_dashboard(tenant: Optional[str] = Query(None)):
+async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
     """Get tenant dashboard"""
-    tenant_id = tenant or "default"
+    tenant_id = tenant or get_tenant_from_request(request)
     
     return HTMLResponse(f"""
     <!DOCTYPE html>
@@ -336,12 +480,13 @@ async def get_dashboard(tenant: Optional[str] = Query(None)):
                 <button class="btn" onclick="processData()">Process Health Data</button>
                 <button class="btn" onclick="getInsights()">Get Health Insights</button>
                 <button class="btn" onclick="checkAgents()">Check Agent Status</button>
+                <button class="btn" onclick="chatWithLLM()">Chat with AI</button>
             </div>
         </div>
         
         <script>
             async function processData() {{
-                const response = await fetch('/agents/process?tenant={tenant_id}', {{
+                const response = await fetch('/agents/process', {{
                     method: 'POST',
                     headers: {{ 'Content-Type': 'application/json' }},
                     body: JSON.stringify({{}})
@@ -352,18 +497,42 @@ async def get_dashboard(tenant: Optional[str] = Query(None)):
             }}
             
             async function getInsights() {{
-                const response = await fetch('/agents/status?tenant={tenant_id}');
+                const response = await fetch('/api/context/insights');
                 const result = await response.json();
-                alert('Agent status retrieved! Check console for details.');
-                console.log('Agent status:', result);
+                alert(`Retrieved ${{result.count}} insights! Check console for details.`);
+                console.log('Insights:', result);
             }}
             
             async function checkAgents() {{
-                const response = await fetch('/agents/status?tenant={tenant_id}');
+                const response = await fetch('/agents/status');
                 const result = await response.json();
                 alert(`${{result.total_agents}} agents are operational!`);
                 console.log('Agent status:', result);
             }}
+            
+            async function getContextSummary() {{
+                const response = await fetch('/api/context/summary');
+                const result = await response.json();
+                console.log('Context summary:', result);
+                return result;
+            }}
+            
+            async function chatWithLLM() {{
+                const message = prompt('Enter your health question:');
+                if (message) {{
+                    const response = await fetch(`/api/llm/chat?message=${{encodeURIComponent(message)}}`, {{
+                        method: 'POST'
+                    }});
+                    const result = await response.json();
+                    alert(`LLM Response: ${{result.response}}`);
+                    console.log('LLM chat:', result);
+                }}
+            }}
+            
+            // Load context summary on page load
+            window.onload = function() {{
+                getContextSummary();
+            }};
         </script>
     </body>
     </html>
