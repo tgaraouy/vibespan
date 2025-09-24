@@ -11,6 +11,28 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from contextlib import asynccontextmanager
 
+# Handle optional dependencies gracefully
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+    logging.warning("Pandas not available - some features may be limited")
+
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    logging.warning("NumPy not available - some features may be limited")
+
+try:
+    from cryptography.fernet import Fernet
+    CRYPTO_AVAILABLE = True
+except ImportError:
+    CRYPTO_AVAILABLE = False
+    logging.warning("Cryptography not available - encryption features disabled")
+
 # Import tenant routes
 from src.api.tenant_routes import router as tenant_router
 from src.api.webhook_routes import router as webhook_router
