@@ -8,24 +8,32 @@ OPENAI_API_KEY=sk-your-openai-api-key-here
 ANTHROPIC_API_KEY=sk-ant-your-anthropic-api-key-here
 ```
 
-### 2. **WHOOP v2 Integration** (for real-time health data)
+### 2. **GitHub OAuth** (for authentication)
+```
+GITHUB_CLIENT_ID=your-github-oauth-app-client-id
+GITHUB_CLIENT_SECRET=your-github-oauth-app-client-secret
+```
+
+### 3. **WHOOP v2 Integration** (for real-time health data)
 ```
 WHOOP_CLIENT_ID=your-whoop-client-id
 WHOOP_CLIENT_SECRET=your-whoop-client-secret
 WHOOP_WEBHOOK_SECRET=your-whoop-webhook-secret
+WHOOP_WEBHOOK_TOKEN=your-whoop-webhook-token
 WHOOP_V2_BASE_URL=https://api.prod.whoop.com
 ```
 
-### 3. **Security & Encryption**
+### 4. **Security & Encryption**
 ```
 JWT_SECRET_KEY=your-super-secret-jwt-key-here-make-it-long-and-random
 ENCRYPTION_KEY=your-32-byte-encryption-key-here
 ```
 
-### 4. **Environment Configuration**
+### 5. **Environment Configuration**
 ```
 ENVIRONMENT=production
 DEBUG=false
+BASE_URL=https://vibespan.ai
 ```
 
 ## How to Add Environment Variables in Vercel:

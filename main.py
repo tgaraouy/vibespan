@@ -14,6 +14,8 @@ from fastapi import FastAPI, Request, Header, HTTPException, Query
 from fastapi.responses import HTMLResponse, PlainTextResponse, JSONResponse
 from agents import get_agent_orchestrator
 from virtual_filesystem import get_context_manager
+from auth import auth_manager
+from whoop_integration import get_whoop_integration
 
 # Load environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -173,33 +175,50 @@ async def whoop_webhook(
     token: Optional[str] = None,
     x_whoop_signature: Optional[str] = Header(default=None)
 ):
-    """WHOOP v2 webhook receiver with simple HMAC verification.
-
-    - Set WHOOP_WEBHOOK_SECRET in Vercel env vars
-    - WHOOP should sign requests with a header (e.g., X-WHOOP-Signature)
-    - We compute HMAC-SHA256 over the raw body and compare
-    """
-    secret = os.getenv("WHOOP_WEBHOOK_SECRET")
-    token_env = os.getenv("WHOOP_WEBHOOK_TOKEN")
+    """WHOOP v2 webhook receiver with real-time data processing"""
+    tenant_id = tenant or get_tenant_from_request(request)
+    whoop_integration = get_whoop_integration(tenant_id)
+    
     body = await request.body()
-
-    # Verify signature if both header and secret are present
-    if secret and x_whoop_signature:
-        computed = hmac.new(secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(computed, x_whoop_signature):
+    body_str = body.decode('utf-8')
+    
+    try:
+        webhook_data = json.loads(body_str)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+    
+    # Verify signature if provided
+    if x_whoop_signature:
+        if not whoop_integration.verify_webhook_signature(body_str, x_whoop_signature):
             raise HTTPException(status_code=401, detail="Invalid WHOOP signature")
-
-    # Alternatively, verify a URL token if provided and configured
-    if token_env:
-        if not token or token != token_env:
-            raise HTTPException(status_code=401, detail="Invalid webhook token")
-
-    # Minimal ack for WHOOP; processing can be added later
+    
+    # Verify token if provided
+    token_env = os.getenv("WHOOP_WEBHOOK_TOKEN")
+    if token_env and token != token_env:
+        raise HTTPException(status_code=401, detail="Invalid webhook token")
+    
+    # Process WHOOP data
+    processed_data = whoop_integration.process_webhook_data(webhook_data)
+    
+    # Save to context manager
+    context_manager = get_context_manager(tenant_id)
+    context_manager.save_health_data("whoop_realtime", processed_data)
+    
+    # Process through agents if we have meaningful data
+    if processed_data.get("metrics"):
+        orchestrator = get_agent_orchestrator(tenant_id)
+        agent_results = await orchestrator.process_health_data(processed_data["metrics"])
+        
+        # Save agent results
+        context_manager.save_agent_result("whoop_processing", agent_results)
+    
     return {
-        "status": "received",
-        "tenant": tenant or "default",
-        "bytes": len(body),
-        "verified": bool((secret and x_whoop_signature) or token_env)
+        "status": "processed",
+        "tenant": tenant_id,
+        "data_type": processed_data.get("data_type", "unknown"),
+        "insights_count": len(processed_data.get("insights", [])),
+        "recommendations_count": len(processed_data.get("recommendations", [])),
+        "timestamp": datetime.now().isoformat()
     }
 
 @app.post("/webhook/test/{tenant_id}")
@@ -215,6 +234,73 @@ def get_tenant_from_request(request: Request) -> str:
     """Extract tenant ID from request"""
     host = request.headers.get("host", "")
     return extract_tenant_from_host(host)
+
+def get_user_from_token(request: Request) -> Optional[Dict[str, Any]]:
+    """Extract user data from JWT token"""
+    auth_header = request.headers.get("authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return None
+    
+    token = auth_header[7:]  # Remove "Bearer " prefix
+    return auth_manager.verify_jwt_token(token)
+
+# Authentication endpoints
+@app.get("/auth/login")
+async def login():
+    """Initiate GitHub OAuth login"""
+    state = auth_manager.generate_state()
+    auth_url = auth_manager.get_github_auth_url(state)
+    
+    return {
+        "auth_url": auth_url,
+        "state": state,
+        "message": "Redirect to GitHub for authentication"
+    }
+
+@app.get("/auth/callback")
+async def auth_callback(code: str, state: str):
+    """Handle GitHub OAuth callback"""
+    # Exchange code for token
+    access_token = auth_manager.exchange_code_for_token(code)
+    if not access_token:
+        raise HTTPException(status_code=400, detail="Failed to exchange code for token")
+    
+    # Get user info
+    user_data = auth_manager.get_github_user_info(access_token)
+    if not user_data:
+        raise HTTPException(status_code=400, detail="Failed to get user information")
+    
+    # Create session
+    session = auth_manager.create_user_session(user_data)
+    
+    # Return success with redirect instructions
+    return {
+        "status": "success",
+        "message": f"Welcome {user_data['name']}! You can now access your dashboard.",
+        "session": session,
+        "redirect_url": session["dashboard_url"]
+    }
+
+@app.get("/auth/me")
+async def get_current_user(request: Request):
+    """Get current authenticated user"""
+    user = get_user_from_token(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    return {
+        "user": user,
+        "authenticated": True,
+        "dashboard_url": f"https://{user['subdomain']}.vibespan.ai/dashboard"
+    }
+
+@app.post("/auth/logout")
+async def logout():
+    """Logout user (client-side token removal)"""
+    return {
+        "status": "success",
+        "message": "Logged out successfully. Please remove your token from client storage."
+    }
 
 # Onboarding endpoints
 @app.get("/onboarding/start")
@@ -408,6 +494,104 @@ async def chat_with_llm(request: Request, message: str, context: Optional[str] =
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"LLM call failed: {str(e)}")
+
+# Daily actions and consistency tracking
+@app.get("/api/daily-actions")
+async def get_daily_actions(request: Request):
+    """Get today's health actions and recommendations"""
+    tenant_id = get_tenant_from_request(request)
+    whoop_integration = get_whoop_integration(tenant_id)
+    context_manager = get_context_manager(tenant_id)
+    
+    # Get daily summary
+    daily_summary = whoop_integration.get_daily_summary()
+    
+    # Get recent insights and recommendations
+    recent_insights = context_manager.get_recent_insights(5)
+    recent_recommendations = context_manager.get_recent_recommendations(5)
+    
+    return {
+        "tenant_id": tenant_id,
+        "date": datetime.now().strftime("%Y-%m-%d"),
+        "daily_summary": daily_summary,
+        "insights": recent_insights,
+        "recommendations": recent_recommendations,
+        "actions_today": [
+            {
+                "id": "check_recovery",
+                "title": "Check Recovery Score",
+                "description": "Review your WHOOP recovery data",
+                "completed": False,
+                "priority": "high"
+            },
+            {
+                "id": "review_sleep",
+                "title": "Review Sleep Quality",
+                "description": "Analyze last night's sleep metrics",
+                "completed": False,
+                "priority": "high"
+            },
+            {
+                "id": "plan_workout",
+                "title": "Plan Today's Workout",
+                "description": "Based on recovery, plan your training",
+                "completed": False,
+                "priority": "medium"
+            },
+            {
+                "id": "hydration_check",
+                "title": "Hydration Check",
+                "description": "Ensure adequate water intake",
+                "completed": False,
+                "priority": "medium"
+            }
+        ]
+    }
+
+@app.post("/api/daily-actions/{action_id}/complete")
+async def complete_daily_action(request: Request, action_id: str):
+    """Mark a daily action as completed"""
+    tenant_id = get_tenant_from_request(request)
+    context_manager = get_context_manager(tenant_id)
+    
+    # Save completed action
+    action_data = {
+        "action_id": action_id,
+        "completed_at": datetime.now().isoformat(),
+        "tenant_id": tenant_id
+    }
+    
+    context_manager.vfs.write_file("daily_actions", f"action_{action_id}_{datetime.now().strftime('%Y%m%d')}.json", action_data)
+    
+    return {
+        "status": "completed",
+        "action_id": action_id,
+        "completed_at": action_data["completed_at"],
+        "message": f"Action '{action_id}' marked as completed"
+    }
+
+@app.get("/api/consistency/streak")
+async def get_consistency_streak(request: Request):
+    """Get consistency streak data"""
+    tenant_id = get_tenant_from_request(request)
+    context_manager = get_context_manager(tenant_id)
+    
+    # Get daily actions history
+    action_files = context_manager.vfs.list_files("daily_actions")
+    
+    # Calculate streak (simplified)
+    current_streak = 0
+    max_streak = 0
+    total_actions = len(action_files)
+    
+    return {
+        "tenant_id": tenant_id,
+        "current_streak": current_streak,
+        "max_streak": max_streak,
+        "total_actions": total_actions,
+        "consistency_score": min(100, (total_actions * 10)),  # Simplified scoring
+        "last_updated": datetime.now().isoformat()
+    }
 
 # Tenant-specific dashboard
 @app.get("/dashboard")
