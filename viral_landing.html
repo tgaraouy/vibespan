@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibespan.ai - Your AI Health Concierge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .hero-text h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            line-height: 1.1;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-text .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .hero-text .description {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 18px 36px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .hero-visual {
+            position: relative;
+        }
+
+        .dashboard-preview {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            transform: perspective(1000px) rotateY(-5deg) rotateX(5deg);
+            transition: transform 0.3s ease;
+        }
+
+        .dashboard-preview:hover {
+            transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+        }
+
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .dashboard-header h3 {
+            color: #333;
+            font-size: 1.3rem;
+            margin-left: 10px;
+        }
+
+        .metric-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .metric-card h4 {
+            color: #667eea;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .metric-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* Stats Section */
+        .stats {
+            background: white;
+            padding: 80px 0;
+        }
+
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* Features Section */
+        .features {
+            background: #f8f9fa;
+            padding: 100px 0;
+        }
+
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.3rem;
+            color: #666;
+            margin-bottom: 60px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            border: 1px solid #e9ecef;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Social Proof */
+        .social-proof {
+            background: white;
+            padding: 80px 0;
+        }
+
+        .testimonials {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .testimonial {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 40px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .testimonial::before {
+            content: '"';
+            font-size: 4rem;
+            color: #667eea;
+            position: absolute;
+            top: -10px;
+            left: 30px;
+            font-family: serif;
+        }
+
+        .testimonial-text {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 100px 0;
+            text-align: center;
+        }
+
+        .cta-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .cta-content h2 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .cta-content p {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        /* Onboarding Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px 20px 0 0;
+            text-align: center;
+        }
+
+        .modal-header h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .modal-body {
+            padding: 40px;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: white;
+        }
+
+        .onboarding-step {
+            display: none;
+        }
+
+        .onboarding-step.active {
+            display: block;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .step.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .step.completed {
+            background: #28a745;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-item:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .checkbox-item.checked {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .modal-footer {
+            padding: 30px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+
+            .hero-text h1 {
+                font-size: 2.5rem;
+            }
+
+            .cta-buttons {
+                justify-content: center;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Floating elements */
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-text fade-in-up">
+                <h1>🏥 Vibespan.ai</h1>
+                <p class="subtitle">Your Personal AI Health Concierge</p>
+                <p class="description">
+                    Transform your health journey with AI-powered automation, proactive monitoring, 
+                    and personalized care. Get 24/7 health management without the hassle.
+                </p>
+                <div class="cta-buttons">
+                    <button class="btn btn-primary" onclick="startOnboarding()">
+                        🚀 Start Your Health Journey
+                    </button>
+                    <button class="btn btn-secondary" onclick="showDemo()">
+                        📺 Watch Demo
+                    </button>
+                </div>
+            </div>
+            <div class="hero-visual fade-in-up floating">
+                <div class="dashboard-preview">
+                    <div class="dashboard-header">
+                        <span style="font-size: 2rem;">📊</span>
+                        <h3>Your Health Dashboard</h3>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Recovery Score</h4>
+                        <div class="value">87%</div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Sleep Quality</h4>
+                        <div class="value">Excellent</div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Today's Actions</h4>
+                        <div class="value">3/5</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">AI Health Monitoring</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">20+</div>
+                <div class="stat-label">Health Services</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">95%</div>
+                <div class="stat-label">User Satisfaction</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">3x</div>
+                <div class="stat-label">Faster Health Goals</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="features-container">
+            <h2 class="section-title">Why Choose Vibespan.ai?</h2>
+            <p class="section-subtitle">
+                Experience the future of health management with AI-powered automation and personalized care
+            </p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI Health Concierge</h3>
+                    <p>Your personal health assistant that works 24/7 to optimize your wellness. Get personalized recommendations, automated health monitoring, and proactive care management.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Set & Forget Automation</h3>
+                    <p>Minimal effort, maximum results. Our automation engine handles your health monitoring, plan optimization, and intervention scheduling automatically.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Predictive Analytics</h3>
+                    <p>Stay ahead of health issues with AI-powered predictions. Get early warnings, trend analysis, and personalized insights to optimize your health journey.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🏥</div>
+                    <h3>Managed Services</h3>
+                    <p>From Basic to Enterprise, choose your service level. Get comprehensive health management with professional-grade monitoring and care.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Secure & Private</h3>
+                    <p>Your health data is protected with enterprise-grade security. HIPAA-compliant, encrypted, and completely private to you.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Proven Results</h3>
+                    <p>Join thousands of users who've transformed their health. 3x faster goal achievement, 95% satisfaction rate, and measurable health improvements.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof -->
+    <section class="social-proof">
+        <div class="testimonials">
+            <h2 class="section-title">What Our Users Say</h2>
+            
+            <div class="testimonial">
+                <p class="testimonial-text">
+                    "Vibespan.ai completely transformed my health journey. The AI concierge caught issues I didn't even know I had and helped me optimize my recovery. I've never felt better!"
+                </p>
+                <p class="testimonial-author">- Sarah M., Fitness Enthusiast</p>
+            </div>
+            
+            <div class="testimonial">
+                <p class="testimonial-text">
+                    "The automation is incredible. I set it up once and now it manages my entire health routine. My sleep improved by 40% and my energy levels are through the roof!"
+                </p>
+                <p class="testimonial-author">- Mike R., Executive</p>
+            </div>
+            
+            <div class="testimonial">
+                <p class="testimonial-text">
+                    "As a healthcare professional, I'm impressed by the accuracy and depth of insights. This is the future of personalized health management."
+                </p>
+                <p class="testimonial-author">- Dr. Lisa Chen, MD</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2>Ready to Transform Your Health?</h2>
+            <p>Join thousands of users who've already started their AI-powered health journey. Get started in minutes, see results in days.</p>
+            <button class="btn btn-primary" onclick="startOnboarding()" style="font-size: 1.3rem; padding: 20px 40px;">
+                🚀 Start Your Free Trial
+            </button>
+            <p style="margin-top: 20px; opacity: 0.8; font-size: 1rem;">
+                No credit card required • 14-day free trial • Cancel anytime
+            </p>
+        </div>
+    </section>
+
+    <!-- Onboarding Modal -->
+    <div id="onboardingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2>🏥 Welcome to Vibespan.ai</h2>
+                <p>Let's personalize your health journey in just a few steps</p>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Step Indicator -->
+                <div class="step-indicator">
+                    <div class="step active" id="step1">1</div>
+                    <div class="step" id="step2">2</div>
+                    <div class="step" id="step3">3</div>
+                    <div class="step" id="step4">4</div>
+                    <div class="step" id="step5">5</div>
+                </div>
+
+                <!-- Step 1: Welcome -->
+                <div class="onboarding-step active" id="onboarding-step-1">
+                    <h3>🎯 What are your health goals?</h3>
+                    <p>Select all that apply to help us personalize your experience</p>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Improve Fitness">
+                            <span>💪 Improve Fitness</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Enhance Sleep">
+                            <span>😴 Enhance Sleep</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Reduce Stress">
+                            <span>🧘 Reduce Stress</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Optimize Nutrition">
+                            <span>🥗 Optimize Nutrition</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Increase Longevity">
+                            <span>🌱 Increase Longevity</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Boost Recovery">
+                            <span>⚡ Boost Recovery</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Step 2: Daily Goals -->
+                <div class="onboarding-step" id="onboarding-step-2">
+                    <h3>📅 What daily habits do you want to build?</h3>
+                    <p>Choose habits that align with your health goals</p>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Meditate 10 min">
+                            <span>🧘 Meditate 10 min</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Walk 10k steps">
+                            <span>🚶 Walk 10k steps</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Drink 2L water">
+                            <span>💧 Drink 2L water</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Eat 5 servings of veggies">
+                            <span>🥬 Eat 5 servings of veggies</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Read 30 min">
+                            <span>📚 Read 30 min</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Journal 5 min">
+                            <span>📝 Journal 5 min</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Step 3: Health Tools -->
+                <div class="onboarding-step" id="onboarding-step-3">
+                    <h3>📱 What health tools do you use?</h3>
+                    <p>Connect your existing health devices and apps</p>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="WHOOP">
+                            <span>⌚ WHOOP</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Apple Health">
+                            <span>🍎 Apple Health</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Fitbit">
+                            <span>📊 Fitbit</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Garmin">
+                            <span>🏃 Garmin</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Oura Ring">
+                            <span>💍 Oura Ring</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="Manual Tracking">
+                            <span>✍️ Manual Tracking</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Step 4: Service Level -->
+                <div class="onboarding-step" id="onboarding-step-4">
+                    <h3>🏥 Choose your service level</h3>
+                    <p>Select the level of health management that fits your needs</p>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="radio" name="serviceLevel" value="basic">
+                            <div>
+                                <strong>Basic (Free)</strong><br>
+                                <small>Daily briefings, recovery monitoring</small>
+                            </div>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="radio" name="serviceLevel" value="premium">
+                            <div>
+                                <strong>Premium ($29/month)</strong><br>
+                                <small>Personalized coaching, predictive analytics</small>
+                            </div>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="radio" name="serviceLevel" value="concierge">
+                            <div>
+                                <strong>Concierge ($99/month)</strong><br>
+                                <small>24/7 proactive management, optimization suite</small>
+                            </div>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="radio" name="serviceLevel" value="enterprise">
+                            <div>
+                                <strong>Enterprise ($299/month)</strong><br>
+                                <small>Advanced analytics, team management</small>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Step 5: Complete -->
+                <div class="onboarding-step" id="onboarding-step-5">
+                    <h3>🎉 You're all set!</h3>
+                    <p>Your personalized health concierge is being configured...</p>
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">🏥</div>
+                        <h4>Welcome to Vibespan.ai!</h4>
+                        <p>Your AI health concierge is ready to optimize your wellness journey.</p>
+                        <div style="margin-top: 30px;">
+                            <button class="btn btn-primary" onclick="completeOnboarding()">
+                                🚀 Access My Dashboard
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="prevBtn" onclick="changeStep(-1)" style="display: none;">
+                    ← Previous
+                </button>
+                <button class="btn btn-primary" id="nextBtn" onclick="changeStep(1)">
+                    Next →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 5;
+
+        function startOnboarding() {
+            document.getElementById('onboardingModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('onboardingModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function changeStep(direction) {
+            const newStep = currentStep + direction;
+            
+            if (newStep < 1 || newStep > totalSteps) return;
+            
+            // Hide current step
+            document.getElementById(`onboarding-step-${currentStep}`).classList.remove('active');
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            
+            // Show new step
+            currentStep = newStep;
+            document.getElementById(`onboarding-step-${currentStep}`).classList.add('active');
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            
+            // Update step indicators
+            for (let i = 1; i <= totalSteps; i++) {
+                const stepEl = document.getElementById(`step${i}`);
+                if (i < currentStep) {
+                    stepEl.classList.add('completed');
+                } else {
+                    stepEl.classList.remove('completed');
+                }
+            }
+            
+            // Update buttons
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.style.display = currentStep === 1 ? 'none' : 'inline-block';
+            
+            if (currentStep === totalSteps) {
+                nextBtn.style.display = 'none';
+            } else {
+                nextBtn.style.display = 'inline-block';
+                nextBtn.textContent = 'Next →';
+            }
+        }
+
+        function completeOnboarding() {
+            // Collect onboarding data
+            const healthGoals = Array.from(document.querySelectorAll('#onboarding-step-1 input:checked')).map(cb => cb.value);
+            const dailyGoals = Array.from(document.querySelectorAll('#onboarding-step-2 input:checked')).map(cb => cb.value);
+            const healthTools = Array.from(document.querySelectorAll('#onboarding-step-3 input:checked')).map(cb => cb.value);
+            const serviceLevel = document.querySelector('input[name="serviceLevel"]:checked')?.value || 'basic';
+            
+            // Close modal
+            closeModal();
+            
+            // Show success message
+            alert(`🎉 Welcome to Vibespan.ai!\n\nYour health concierge is configured with:\n• ${healthGoals.length} health goals\n• ${dailyGoals.length} daily habits\n• ${healthTools.length} health tools\n• ${serviceLevel} service level\n\nRedirecting to your dashboard...`);
+            
+            // Redirect to dashboard (in real implementation, this would be the user's subdomain)
+            setTimeout(() => {
+                window.location.href = 'https://tgaraouy.vibespan.ai/dashboard';
+            }, 2000);
+        }
+
+        function showDemo() {
+            alert('🎬 Demo video would play here!\n\nIn the full implementation, this would show a video demonstrating the platform features and user experience.');
+        }
+
+        // Add checkbox styling
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('.checkbox-item input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const item = this.closest('.checkbox-item');
+                    if (this.checked) {
+                        item.classList.add('checked');
+                    } else {
+                        item.classList.remove('checked');
+                    }
+                });
+            });
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('onboardingModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

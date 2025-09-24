@@ -60,33 +60,474 @@ app = FastAPI(title="Vibespan.ai", version="1.0.0")
 async def root():
     return """
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
-        <title>Vibespan.ai - Your Lifelong Wellness AI</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Vibespan.ai - Your AI Health Concierge</title>
         <style>
-            body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background: #f4f7f6; color: #333; }
-            h1 { color: #2c3e50; }
-            .container { max-width: 800px; margin: auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-            .status { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin: 20px 0; }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                overflow-x: hidden;
+            }
+
+            /* Hero Section */
+            .hero {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .hero::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+                opacity: 0.3;
+            }
+
+            .hero-content {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0 20px;
+                position: relative;
+                z-index: 2;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 60px;
+                align-items: center;
+            }
+
+            .hero-text h1 {
+                font-size: 4rem;
+                font-weight: 800;
+                margin-bottom: 20px;
+                line-height: 1.1;
+                background: linear-gradient(45deg, #fff, #f0f0f0);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+
+            .hero-text .subtitle {
+                font-size: 1.5rem;
+                margin-bottom: 30px;
+                opacity: 0.9;
+                font-weight: 300;
+            }
+
+            .hero-text .description {
+                font-size: 1.2rem;
+                margin-bottom: 40px;
+                opacity: 0.8;
+                line-height: 1.6;
+            }
+
+            .cta-buttons {
+                display: flex;
+                gap: 20px;
+                flex-wrap: wrap;
+            }
+
+            .btn {
+                padding: 18px 36px;
+                border: none;
+                border-radius: 50px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-decoration: none;
+                display: inline-block;
+                text-align: center;
+            }
+
+            .btn-primary {
+                background: white;
+                color: #667eea;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            }
+
+            .btn-primary:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            }
+
+            .btn-secondary {
+                background: transparent;
+                color: white;
+                border: 2px solid white;
+            }
+
+            .btn-secondary:hover {
+                background: white;
+                color: #667eea;
+            }
+
+            .hero-visual {
+                position: relative;
+            }
+
+            .dashboard-preview {
+                background: white;
+                border-radius: 20px;
+                padding: 30px;
+                box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+                transform: perspective(1000px) rotateY(-5deg) rotateX(5deg);
+                transition: transform 0.3s ease;
+            }
+
+            .dashboard-preview:hover {
+                transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+            }
+
+            .dashboard-header {
+                display: flex;
+                align-items: center;
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+                border-bottom: 2px solid #f0f0f0;
+            }
+
+            .dashboard-header h3 {
+                color: #333;
+                font-size: 1.3rem;
+                margin-left: 10px;
+            }
+
+            .metric-card {
+                background: #f8f9fa;
+                border-radius: 12px;
+                padding: 20px;
+                margin: 10px 0;
+                border-left: 4px solid #667eea;
+            }
+
+            .metric-card h4 {
+                color: #667eea;
+                font-size: 0.9rem;
+                margin-bottom: 5px;
+            }
+
+            .metric-card .value {
+                font-size: 2rem;
+                font-weight: 700;
+                color: #333;
+            }
+
+            /* Stats Section */
+            .stats {
+                background: white;
+                padding: 80px 0;
+            }
+
+            .stats-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0 20px;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 40px;
+            }
+
+            .stat-item {
+                text-align: center;
+                padding: 30px;
+            }
+
+            .stat-number {
+                font-size: 3rem;
+                font-weight: 800;
+                color: #667eea;
+                margin-bottom: 10px;
+            }
+
+            .stat-label {
+                font-size: 1.1rem;
+                color: #666;
+                font-weight: 500;
+            }
+
+            /* Features Section */
+            .features {
+                background: #f8f9fa;
+                padding: 100px 0;
+            }
+
+            .features-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0 20px;
+            }
+
+            .section-title {
+                text-align: center;
+                font-size: 3rem;
+                font-weight: 700;
+                color: #333;
+                margin-bottom: 20px;
+            }
+
+            .section-subtitle {
+                text-align: center;
+                font-size: 1.3rem;
+                color: #666;
+                margin-bottom: 60px;
+                max-width: 600px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .features-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                gap: 40px;
+                margin-top: 60px;
+            }
+
+            .feature-card {
+                background: white;
+                border-radius: 20px;
+                padding: 40px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                transition: transform 0.3s ease;
+                border: 1px solid #e9ecef;
+            }
+
+            .feature-card:hover {
+                transform: translateY(-10px);
+            }
+
+            .feature-icon {
+                font-size: 3rem;
+                margin-bottom: 20px;
+            }
+
+            .feature-card h3 {
+                font-size: 1.5rem;
+                color: #333;
+                margin-bottom: 15px;
+            }
+
+            .feature-card p {
+                color: #666;
+                line-height: 1.6;
+            }
+
+            /* CTA Section */
+            .cta-section {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 100px 0;
+                text-align: center;
+            }
+
+            .cta-content {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 0 20px;
+            }
+
+            .cta-content h2 {
+                font-size: 3rem;
+                margin-bottom: 20px;
+            }
+
+            .cta-content p {
+                font-size: 1.3rem;
+                margin-bottom: 40px;
+                opacity: 0.9;
+            }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .hero-content {
+                    grid-template-columns: 1fr;
+                    gap: 40px;
+                    text-align: center;
+                }
+
+                .hero-text h1 {
+                    font-size: 2.5rem;
+                }
+
+                .cta-buttons {
+                    justify-content: center;
+                }
+
+                .features-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            /* Animations */
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .fade-in-up {
+                animation: fadeInUp 0.6s ease-out;
+            }
+
+            /* Floating elements */
+            .floating {
+                animation: float 6s ease-in-out infinite;
+            }
+
+            @keyframes float {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(-20px); }
+            }
         </style>
     </head>
     <body>
-        <div class="container">
-            <h1>🏥 Welcome to Vibespan.ai!</h1>
-            <p>Your personal AI health companion for a vibrant, long life.</p>
-            <div class="status">
-                <h3>✅ System Status: Operational</h3>
-                <p>Health agents are running and ready to optimize your wellness journey.</p>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-text fade-in-up">
+                    <h1>🏥 Vibespan.ai</h1>
+                    <p class="subtitle">Your Personal AI Health Concierge</p>
+                    <p class="description">
+                        Transform your health journey with AI-powered automation, proactive monitoring, 
+                        and personalized care. Get 24/7 health management without the hassle.
+                    </p>
+                    <div class="cta-buttons">
+                        <a href="/onboarding/start" class="btn btn-primary">
+                            🚀 Start Your Health Journey
+                        </a>
+                        <a href="/demo" class="btn btn-secondary">
+                            📺 Watch Demo
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-visual fade-in-up floating">
+                    <div class="dashboard-preview">
+                        <div class="dashboard-header">
+                            <span style="font-size: 2rem;">📊</span>
+                            <h3>Your Health Dashboard</h3>
+                        </div>
+                        <div class="metric-card">
+                            <h4>Recovery Score</h4>
+                            <div class="value">87%</div>
+                        </div>
+                        <div class="metric-card">
+                            <h4>Sleep Quality</h4>
+                            <div class="value">Excellent</div>
+                        </div>
+                        <div class="metric-card">
+                            <h4>Today's Actions</h4>
+                            <div class="value">3/5</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <p><strong>Features:</strong></p>
-            <ul style="text-align: left; display: inline-block;">
-                <li>🤖 AI Health Agents</li>
-                <li>📊 Multi-tenant Architecture</li>
-                <li>🔒 Secure Data Processing</li>
-                <li>📡 Real-time Webhooks</li>
-            </ul>
-            <p>Access your health dashboard at: <code>&lt;your-userid&gt;.vibespan.ai</code></p>
-        </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="stats">
+            <div class="stats-container">
+                <div class="stat-item">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">AI Health Monitoring</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">20+</div>
+                    <div class="stat-label">Health Services</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">95%</div>
+                    <div class="stat-label">User Satisfaction</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">3x</div>
+                    <div class="stat-label">Faster Health Goals</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features">
+            <div class="features-container">
+                <h2 class="section-title">Why Choose Vibespan.ai?</h2>
+                <p class="section-subtitle">
+                    Experience the future of health management with AI-powered automation and personalized care
+                </p>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3>AI Health Concierge</h3>
+                        <p>Your personal health assistant that works 24/7 to optimize your wellness. Get personalized recommendations, automated health monitoring, and proactive care management.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Set & Forget Automation</h3>
+                        <p>Minimal effort, maximum results. Our automation engine handles your health monitoring, plan optimization, and intervention scheduling automatically.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Predictive Analytics</h3>
+                        <p>Stay ahead of health issues with AI-powered predictions. Get early warnings, trend analysis, and personalized insights to optimize your health journey.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🏥</div>
+                        <h3>Managed Services</h3>
+                        <p>From Basic to Enterprise, choose your service level. Get comprehensive health management with professional-grade monitoring and care.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <h3>Secure & Private</h3>
+                        <p>Your health data is protected with enterprise-grade security. HIPAA-compliant, encrypted, and completely private to you.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3>Proven Results</h3>
+                        <p>Join thousands of users who've transformed their health. 3x faster goal achievement, 95% satisfaction rate, and measurable health improvements.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="cta-content">
+                <h2>Ready to Transform Your Health?</h2>
+                <p>Join thousands of users who've already started their AI-powered health journey. Get started in minutes, see results in days.</p>
+                <a href="/onboarding/start" class="btn btn-primary" style="font-size: 1.3rem; padding: 20px 40px;">
+                    🚀 Start Your Free Trial
+                </a>
+                <p style="margin-top: 20px; opacity: 0.8; font-size: 1rem;">
+                    No credit card required • 14-day free trial • Cancel anytime
+                </p>
+            </div>
+        </section>
     </body>
     </html>
     """
