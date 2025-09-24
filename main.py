@@ -139,6 +139,7 @@ async def whoop_verify(challenge: Optional[str] = None):
 async def whoop_webhook(
     request: Request,
     tenant: Optional[str] = None,
+    token: Optional[str] = None,
     x_whoop_signature: Optional[str] = Header(default=None)
 ):
     """WHOOP v2 webhook receiver with simple HMAC verification.
@@ -148,6 +149,7 @@ async def whoop_webhook(
     - We compute HMAC-SHA256 over the raw body and compare
     """
     secret = os.getenv("WHOOP_WEBHOOK_SECRET")
+    token_env = os.getenv("WHOOP_WEBHOOK_TOKEN")
     body = await request.body()
 
     # Verify signature if both header and secret are present
@@ -156,12 +158,17 @@ async def whoop_webhook(
         if not hmac.compare_digest(computed, x_whoop_signature):
             raise HTTPException(status_code=401, detail="Invalid WHOOP signature")
 
+    # Alternatively, verify a URL token if provided and configured
+    if token_env:
+        if not token or token != token_env:
+            raise HTTPException(status_code=401, detail="Invalid webhook token")
+
     # Minimal ack for WHOOP; processing can be added later
     return {
         "status": "received",
         "tenant": tenant or "default",
         "bytes": len(body),
-        "verified": bool(secret and x_whoop_signature)
+        "verified": bool((secret and x_whoop_signature) or token_env)
     }
 
 @app.post("/webhook/test/{tenant_id}")
