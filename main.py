@@ -4,8 +4,16 @@ Vibespan.ai - Ultra-Simple Vercel Version
 No complex imports, no file system access, just basic FastAPI.
 """
 
+import os
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+
+# Load environment variables
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
 app = FastAPI(title="Vibespan.ai", version="1.0.0")
 
@@ -46,7 +54,29 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "version": "1.0.0", "platform": "Vibespan.ai"}
+    return {
+        "status": "healthy", 
+        "version": "1.0.0", 
+        "platform": "Vibespan.ai",
+        "environment": ENVIRONMENT,
+        "debug": DEBUG
+    }
+
+@app.get("/env-status")
+async def env_status():
+    """Check environment variables status"""
+    return {
+        "environment": ENVIRONMENT,
+        "debug": DEBUG,
+        "openai_configured": bool(OPENAI_API_KEY),
+        "anthropic_configured": bool(ANTHROPIC_API_KEY),
+        "jwt_configured": bool(JWT_SECRET_KEY),
+        "total_vars_loaded": sum([
+            bool(OPENAI_API_KEY),
+            bool(ANTHROPIC_API_KEY),
+            bool(JWT_SECRET_KEY)
+        ])
+    }
 
 @app.get("/api/status")
 async def api_status():
