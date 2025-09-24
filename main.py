@@ -5,8 +5,11 @@ No complex imports, no file system access, just basic FastAPI.
 """
 
 import os
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+import hmac
+import hashlib
+from typing import Optional
+from fastapi import FastAPI, Request, Header, HTTPException
+from fastapi.responses import HTMLResponse, PlainTextResponse
 
 # Load environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -121,6 +124,44 @@ async def agents_status():
             "SafetyOfficer"
         ],
         "status": "operational"
+    }
+
+@app.get("/webhook/whoop", response_class=PlainTextResponse)
+async def whoop_verify(challenge: Optional[str] = None):
+    """Optional verification handler if WHOOP sends a challenge query.
+    Returns the challenge value verbatim if present.
+    """
+    if challenge:
+        return challenge
+    return "ok"
+
+@app.post("/webhook/whoop")
+async def whoop_webhook(
+    request: Request,
+    tenant: Optional[str] = None,
+    x_whoop_signature: Optional[str] = Header(default=None)
+):
+    """WHOOP v2 webhook receiver with simple HMAC verification.
+
+    - Set WHOOP_WEBHOOK_SECRET in Vercel env vars
+    - WHOOP should sign requests with a header (e.g., X-WHOOP-Signature)
+    - We compute HMAC-SHA256 over the raw body and compare
+    """
+    secret = os.getenv("WHOOP_WEBHOOK_SECRET")
+    body = await request.body()
+
+    # Verify signature if both header and secret are present
+    if secret and x_whoop_signature:
+        computed = hmac.new(secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(computed, x_whoop_signature):
+            raise HTTPException(status_code=401, detail="Invalid WHOOP signature")
+
+    # Minimal ack for WHOOP; processing can be added later
+    return {
+        "status": "received",
+        "tenant": tenant or "default",
+        "bytes": len(body),
+        "verified": bool(secret and x_whoop_signature)
     }
 
 @app.post("/webhook/test/{tenant_id}")
