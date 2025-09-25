@@ -3400,6 +3400,96 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
         </div>
 
         <script>
+            // Global functions accessible from HTML onclick
+            window.analyzePatterns = async function() {{
+                addMessage("Running pattern analysis... This may take a few moments.", 'system');
+                try {{
+                    const response = await fetch('/agents/process', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ 
+                            action: 'analyze_patterns',
+                            data: {{ 
+                                hrv: 42, 
+                                recovery: 85, 
+                                sleep: 8.2, 
+                                strain: 12.5,
+                                workout_time: 'evening'
+                            }}
+                        }})
+                    }});
+                    const result = await response.json();
+                    addMessage(`Analysis complete! ${{result.message || 'Pattern analysis finished. Check the Patterns tab for details.'}}`, 'ai');
+                }} catch (error) {{
+                    addMessage("Analysis complete! I found 3 key patterns in your data:\n\n1. **Evening Workout Pattern**: Your 4 PM+ workouts correlate with 15% better sleep quality\n2. **Protein-Recovery Link**: High protein breakfasts improve your recovery scores by 20%\n3. **Timing Optimization**: Your body responds best to compound movements in the evening\n\nThese patterns suggest your current routine is well-optimized for your lifestyle and preferences.", 'ai');
+                }}
+            }};
+
+            window.generateWorkout = async function() {{
+                addMessage("Generating personalized workout based on your recovery score and preferences...", 'system');
+                try {{
+                    const response = await fetch('/agents/process', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ 
+                            action: 'generate_workout',
+                            data: {{ 
+                                recovery: 85, 
+                                workout_time: 'evening',
+                                preferences: ['strength', 'compound_movements']
+                            }}
+                        }})
+                    }});
+                    const result = await response.json();
+                    addMessage(`${{result.message || 'Workout generated successfully!'}}`, 'ai');
+                }} catch (error) {{
+                    addMessage("**Evening Strength Training Plan** (Perfect for your 4 PM+ preference):\n\n**Warm-up (5 min)**: Dynamic stretching, light cardio\n**Main Workout (25 min)**:\n- Squats: 3 sets x 8-12 reps\n- Deadlifts: 3 sets x 6-8 reps\n- Push-ups: 3 sets x 10-15 reps\n- Pull-ups/Assisted: 3 sets x 5-8 reps\n\n**Cool-down (5 min)**: Static stretching, deep breathing\n\n*This moderate intensity workout aligns with your 85% recovery and evening timing preference.*", 'ai');
+                }}
+            }};
+
+            window.optimizeNutrition = async function() {{
+                addMessage("Analyzing your nutrition needs based on your activity, recovery, and evening workout schedule...", 'system');
+                try {{
+                    const response = await fetch('/agents/process', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ 
+                            action: 'optimize_nutrition',
+                            data: {{ 
+                                recovery: 85, 
+                                workout_time: 'evening',
+                                goals: ['performance', 'recovery']
+                            }}
+                        }})
+                    }});
+                    const result = await response.json();
+                    addMessage(`${{result.message || 'Nutrition plan optimized successfully!'}}`, 'ai');
+                }} catch (error) {{
+                    addMessage("**Personalized Nutrition Plan** (Optimized for evening workouts):\n\n**Breakfast (7-9 AM)**: High protein (30g+) - eggs, Greek yogurt, or protein smoothie\n**Lunch (12-2 PM)**: Balanced with complex carbs - quinoa, vegetables, lean protein\n**Pre-Workout (3:30 PM)**: Light snack - banana with almond butter or energy bar\n**Post-Workout (6-7 PM)**: Protein + carbs - chicken with sweet potato or protein shake\n**Dinner (8-9 PM)**: Light and easy to digest - fish with vegetables\n\n*Stay hydrated with 3L water throughout the day, especially around your evening workout.*", 'ai');
+                }}
+            }};
+
+            window.checkMedications = async function() {{
+                addMessage("Checking your medication schedule and potential interactions...", 'system');
+                try {{
+                    const response = await fetch('/agents/process', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ 
+                            action: 'check_medications',
+                            data: {{ 
+                                current_time: new Date().toISOString(),
+                                workout_time: 'evening'
+                            }}
+                        }})
+                    }});
+                    const result = await response.json();
+                    addMessage(`${{result.message || 'Medication check completed successfully!'}}`, 'ai');
+                }} catch (error) {{
+                    addMessage("**Medication & Supplement Review**:\n\n✅ **All medications on schedule**\n✅ **No interactions detected**\n✅ **Timing optimized for your routine**\n\n**Recommendations**:\n- Take morning supplements with breakfast for better absorption\n- Evening medications should be taken 2+ hours after your workout\n- Stay consistent with timing to maintain effectiveness\n\n*Your current schedule works well with your evening workout routine.*", 'ai');
+                }}
+            }};
+
             // Load health metrics - Now calling real data
             async function loadHealthMetrics() {{
                 try {{
@@ -3541,96 +3631,6 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
                 
                 document.getElementById(tabName + '-tab').classList.add('active');
                 event.target.classList.add('active');
-            }}
-
-            // Action functions - Now calling real agents
-            async function analyzePatterns() {{
-                addMessage("Running pattern analysis... This may take a few moments.", 'system');
-                try {{
-                    const response = await fetch('/agents/process', {{
-                        method: 'POST',
-                        headers: {{ 'Content-Type': 'application/json' }},
-                        body: JSON.stringify({{ 
-                            action: 'analyze_patterns',
-                            data: {{ 
-                                hrv: 42, 
-                                recovery: 85, 
-                                sleep: 8.2, 
-                                strain: 12.5,
-                                workout_time: 'evening'
-                            }}
-                        }})
-                    }});
-                    const result = await response.json();
-                    addMessage(`Analysis complete! ${{result.message || 'Pattern analysis finished. Check the Patterns tab for details.'}}`, 'ai');
-                }} catch (error) {{
-                    addMessage("Analysis complete! I found 3 key patterns in your data:\n\n1. **Evening Workout Pattern**: Your 4 PM+ workouts correlate with 15% better sleep quality\n2. **Protein-Recovery Link**: High protein breakfasts improve your recovery scores by 20%\n3. **Timing Optimization**: Your body responds best to compound movements in the evening\n\nThese patterns suggest your current routine is well-optimized for your lifestyle and preferences.", 'ai');
-                }}
-            }}
-
-            async function generateWorkout() {{
-                addMessage("Generating personalized workout based on your recovery score and preferences...", 'system');
-                try {{
-                    const response = await fetch('/agents/process', {{
-                        method: 'POST',
-                        headers: {{ 'Content-Type': 'application/json' }},
-                        body: JSON.stringify({{ 
-                            action: 'generate_workout',
-                            data: {{ 
-                                recovery: 85, 
-                                workout_time: 'evening',
-                                preferences: ['strength', 'compound_movements']
-                            }}
-                        }})
-                    }});
-                    const result = await response.json();
-                    addMessage(`${{result.message || 'Workout generated successfully!'}}`, 'ai');
-                }} catch (error) {{
-                    addMessage("**Evening Strength Training Plan** (Perfect for your 4 PM+ preference):\n\n**Warm-up (5 min)**: Dynamic stretching, light cardio\n**Main Workout (25 min)**:\n- Squats: 3 sets x 8-12 reps\n- Deadlifts: 3 sets x 6-8 reps\n- Push-ups: 3 sets x 10-15 reps\n- Pull-ups/Assisted: 3 sets x 5-8 reps\n\n**Cool-down (5 min)**: Static stretching, deep breathing\n\n*This moderate intensity workout aligns with your 85% recovery and evening timing preference.*", 'ai');
-                }}
-            }}
-
-            async function optimizeNutrition() {{
-                addMessage("Analyzing your nutrition needs based on your activity, recovery, and evening workout schedule...", 'system');
-                try {{
-                    const response = await fetch('/agents/process', {{
-                        method: 'POST',
-                        headers: {{ 'Content-Type': 'application/json' }},
-                        body: JSON.stringify({{ 
-                            action: 'optimize_nutrition',
-                            data: {{ 
-                                recovery: 85, 
-                                workout_time: 'evening',
-                                goals: ['performance', 'recovery']
-                            }}
-                        }})
-                    }});
-                    const result = await response.json();
-                    addMessage(`${{result.message || 'Nutrition plan optimized successfully!'}}`, 'ai');
-                }} catch (error) {{
-                    addMessage("**Personalized Nutrition Plan** (Optimized for evening workouts):\n\n**Breakfast (7-9 AM)**: High protein (30g+) - eggs, Greek yogurt, or protein smoothie\n**Lunch (12-2 PM)**: Balanced with complex carbs - quinoa, vegetables, lean protein\n**Pre-Workout (3:30 PM)**: Light snack - banana with almond butter or energy bar\n**Post-Workout (6-7 PM)**: Protein + carbs - chicken with sweet potato or protein shake\n**Dinner (8-9 PM)**: Light and easy to digest - fish with vegetables\n\n*Stay hydrated with 3L water throughout the day, especially around your evening workout.*", 'ai');
-                }}
-            }}
-
-            async function checkMedications() {{
-                addMessage("Checking your medication schedule and potential interactions...", 'system');
-                try {{
-                    const response = await fetch('/agents/process', {{
-                        method: 'POST',
-                        headers: {{ 'Content-Type': 'application/json' }},
-                        body: JSON.stringify({{ 
-                            action: 'check_medications',
-                            data: {{ 
-                                current_time: new Date().toISOString(),
-                                workout_time: 'evening'
-                            }}
-                        }})
-                    }});
-                    const result = await response.json();
-                    addMessage(`${{result.message || 'Medication check completed successfully!'}}`, 'ai');
-                }} catch (error) {{
-                    addMessage("**Medication & Supplement Review**:\n\n✅ **All medications on schedule**\n✅ **No interactions detected**\n✅ **Timing optimized for your routine**\n\n**Recommendations**:\n- Take morning supplements with breakfast for better absorption\n- Evening medications should be taken 2+ hours after your workout\n- Stay consistent with timing to maintain effectiveness\n\n*Your current schedule works well with your evening workout routine.*", 'ai');
-                }}
             }}
 
             // Initialize dashboard
