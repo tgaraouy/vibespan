@@ -296,8 +296,9 @@ class WhoopIntegration:
                     "Content-Type": "application/json"
                 }
                 
-                # Get current date for data requests
-                today = datetime.now().strftime("%Y-%m-%d")
+                # Get current date for data requests (2024-09-24)
+                today = "2024-09-24"  # Using specific date for testing
+                self.logger.info(f"Fetching WHOOP data for date: {today}")
                 
                 # Fetch recovery data
                 recovery_data = await self._fetch_recovery_data(session, headers, today)
@@ -568,19 +569,22 @@ class WhoopIntegration:
             # Real WHOOP API call for recovery data
             url = f"{self.base_url}/v1/recovery/date/{date}"
             async with session.get(url, headers=headers) as response:
+                self.logger.info(f"Recovery API call: {url} - Status: {response.status}")
                 if response.status == 200:
                     data = await response.json()
+                    self.logger.info(f"Recovery API response: {data}")
                     return {
                         "hrv": data.get("hrv", 0),
                         "recovery_percentage": data.get("recovery_percentage", 0),
                         "resting_heart_rate": data.get("resting_heart_rate", 0)
                     }
                 else:
-                        self.logger.warning(f"Recovery API returned {response.status}")
-                        return {}
+                    error_text = await response.text()
+                    self.logger.warning(f"Recovery API returned {response.status}: {error_text}")
+                    return {}
         except Exception as e:
             self.logger.error(f"Error fetching recovery data: {e}")
-                return {}
+            return {}
     
     async def _fetch_sleep_data(self, session: aiohttp.ClientSession, headers: Dict, date: str) -> Dict[str, Any]:
         """Fetch sleep data from WHOOP API"""
@@ -588,8 +592,10 @@ class WhoopIntegration:
             # Real WHOOP API call for sleep data
             url = f"{self.base_url}/v1/sleep/date/{date}"
             async with session.get(url, headers=headers) as response:
+                self.logger.info(f"Sleep API call: {url} - Status: {response.status}")
                 if response.status == 200:
                     data = await response.json()
+                    self.logger.info(f"Sleep API response: {data}")
                     return {
                         "sleep_score": data.get("sleep_score", 0),
                         "duration": data.get("duration", 0),
@@ -599,48 +605,55 @@ class WhoopIntegration:
                         "light_sleep": data.get("light_sleep", 0)
                     }
                 else:
-                        self.logger.warning(f"Sleep API returned {response.status}")
-                        return {}
+                    error_text = await response.text()
+                    self.logger.warning(f"Sleep API returned {response.status}: {error_text}")
+                    return {}
         except Exception as e:
             self.logger.error(f"Error fetching sleep data: {e}")
-                return {}
+            return {}
     
     async def _fetch_cycle_data(self, session: aiohttp.ClientSession, headers: Dict, date: str) -> Dict[str, Any]:
         """Fetch cycle data (strain) from WHOOP API"""
         try:
-                url = f"{self.base_url}/v1/cycle/date/{date}"
-                async with session.get(url, headers=headers) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        return {
-                            "strain": data.get("strain", 0),
-                            "calories": data.get("calories", 0),
-                            "steps": data.get("steps", 0),
-                            "active_time": data.get("active_time", 0)
-                        }
-                    else:
-                        self.logger.warning(f"Cycle API returned {response.status}")
-                        return {}
+            url = f"{self.base_url}/v1/cycle/date/{date}"
+            async with session.get(url, headers=headers) as response:
+                self.logger.info(f"Cycle API call: {url} - Status: {response.status}")
+                if response.status == 200:
+                    data = await response.json()
+                    self.logger.info(f"Cycle API response: {data}")
+                    return {
+                        "strain": data.get("strain", 0),
+                        "calories": data.get("calories", 0),
+                        "steps": data.get("steps", 0),
+                        "active_time": data.get("active_time", 0)
+                    }
+                else:
+                    error_text = await response.text()
+                    self.logger.warning(f"Cycle API returned {response.status}: {error_text}")
+                    return {}
         except Exception as e:
             self.logger.error(f"Error fetching cycle data: {e}")
-                return {}
+            return {}
     
     async def _fetch_profile_data(self, session: aiohttp.ClientSession, headers: Dict) -> Dict[str, Any]:
         """Fetch profile data from WHOOP API"""
         try:
-                url = f"{self.base_url}/v1/user/profile"
-                async with session.get(url, headers=headers) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        return {
-                            "email": self.user_email,
-                            "max_heart_rate": data.get("max_heart_rate", 0),
-                            "height": data.get("height", 0),
-                            "weight": data.get("weight", 0)
-                        }
-                    else:
-                        self.logger.warning(f"Profile API returned {response.status}")
-                        return {"email": self.user_email}
+            url = f"{self.base_url}/v1/user/profile"
+            async with session.get(url, headers=headers) as response:
+                self.logger.info(f"Profile API call: {url} - Status: {response.status}")
+                if response.status == 200:
+                    data = await response.json()
+                    self.logger.info(f"Profile API response: {data}")
+                    return {
+                        "email": self.user_email,
+                        "max_heart_rate": data.get("max_heart_rate", 0),
+                        "height": data.get("height", 0),
+                        "weight": data.get("weight", 0)
+                    }
+                else:
+                    error_text = await response.text()
+                    self.logger.warning(f"Profile API returned {response.status}: {error_text}")
+                    return {"email": self.user_email}
         except Exception as e:
             self.logger.error(f"Error fetching profile data: {e}")
             return {}
@@ -648,24 +661,27 @@ class WhoopIntegration:
     async def _fetch_workout_data(self, session: aiohttp.ClientSession, headers: Dict) -> List[Dict[str, Any]]:
         """Fetch workout data from WHOOP API"""
         try:
-                url = f"{self.base_url}/v1/workout"
-                async with session.get(url, headers=headers) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        workouts = data.get("workouts", []) if isinstance(data, dict) else data
-                        result: List[Dict[str, Any]] = []
-                        for w in workouts:
-                            result.append({
-                                "date": (w.get("start_time") or "").split("T")[0],
-                                "type": w.get("activity_type") or w.get("sport") or "Unknown",
-                                "duration": round((w.get("duration") or 0) / 60, 0),
-                                "strain": w.get("strain", 0),
-                                "calories": w.get("calories", 0)
-                            })
-                        return result
-                    else:
-                        self.logger.warning(f"Workout API returned {response.status}")
-                        return []
+            url = f"{self.base_url}/v1/workout"
+            async with session.get(url, headers=headers) as response:
+                self.logger.info(f"Workout API call: {url} - Status: {response.status}")
+                if response.status == 200:
+                    data = await response.json()
+                    self.logger.info(f"Workout API response: {data}")
+                    workouts = data.get("workouts", []) if isinstance(data, dict) else data
+                    result: List[Dict[str, Any]] = []
+                    for w in workouts:
+                        result.append({
+                            "date": (w.get("start_time") or "").split("T")[0],
+                            "type": w.get("activity_type") or w.get("sport") or "Unknown",
+                            "duration": round((w.get("duration") or 0) / 60, 0),
+                            "strain": w.get("strain", 0),
+                            "calories": w.get("calories", 0)
+                        })
+                    return result
+                else:
+                    error_text = await response.text()
+                    self.logger.warning(f"Workout API returned {response.status}: {error_text}")
+                    return []
         except Exception as e:
             self.logger.error(f"Error fetching workout data: {e}")
             return []
