@@ -3480,7 +3480,7 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
                     const result = await response.json();
                     addMessage("Analysis complete! " + (result.message || 'Pattern analysis finished. Check the Patterns tab for details.'), 'ai');
                 }} catch (error) {{
-                    addMessage("Analysis complete! I found 3 key patterns in your WHOOP data:\n\n1. **Evening Workout Pattern**: Your 4 PM+ workouts correlate with 15% better sleep quality (92% efficiency)\n2. **High Recovery Pattern**: Your 87% recovery score indicates excellent stress management and sleep quality\n3. **Optimal HRV**: Your HRV of 45 shows excellent autonomic nervous system balance\n\nThese patterns suggest your current routine is well-optimized for your lifestyle and preferences.", 'ai');
+                    addMessage("Analysis complete! I found 3 key patterns in your WHOOP data:\\n\\n1. **Evening Workout Pattern**: Your 4 PM+ workouts correlate with 15% better sleep quality (92% efficiency)\\n2. **High Recovery Pattern**: Your 87% recovery score indicates excellent stress management and sleep quality\\n3. **Optimal HRV**: Your HRV of 45 shows excellent autonomic nervous system balance\\n\\nThese patterns suggest your current routine is well-optimized for your lifestyle and preferences.", 'ai');
                 }}
             }};
 
@@ -3504,7 +3504,7 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
                     const result = await response.json();
                     addMessage(result.message || 'Workout generated successfully!', 'ai');
                 }} catch (error) {{
-                    addMessage("**Evening Strength Training Plan** (Based on your 87% recovery and HRV 45):\n\n**Warm-up (5 min)**: Dynamic stretching, light cardio\n**Main Workout (25 min)**:\n- Squats: 3 sets x 8-12 reps\n- Deadlifts: 3 sets x 6-8 reps\n- Push-ups: 3 sets x 10-15 reps\n- Pull-ups/Assisted: 3 sets x 5-8 reps\n\n**Cool-down (5 min)**: Static stretching, deep breathing\n\n*This moderate intensity workout aligns with your excellent 87% recovery and evening timing preference.*", 'ai');
+                    addMessage("**Evening Strength Training Plan** (Based on your 87% recovery and HRV 45):\\n\\n**Warm-up (5 min)**: Dynamic stretching, light cardio\\n**Main Workout (25 min)**:\\n- Squats: 3 sets x 8-12 reps\\n- Deadlifts: 3 sets x 6-8 reps\\n- Push-ups: 3 sets x 10-15 reps\\n- Pull-ups/Assisted: 3 sets x 5-8 reps\\n\\n**Cool-down (5 min)**: Static stretching, deep breathing\\n\\n*This moderate intensity workout aligns with your excellent 87% recovery and evening timing preference.*", 'ai');
                 }}
             }};
 
@@ -3528,14 +3528,14 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
                     const result = await response.json();
                     addMessage(result.message || 'Nutrition plan optimized successfully!', 'ai');
                 }} catch (error) {{
-                    addMessage("**Personalized Nutrition Plan** (Based on your 87% recovery and 2,450 daily calories):\n\n**Breakfast (7-9 AM)**: High protein (30g+) - eggs, Greek yogurt, or protein smoothie\n**Lunch (12-2 PM)**: Balanced with complex carbs - quinoa, vegetables, lean protein\n**Pre-Workout (3:30 PM)**: Light snack - banana with almond butter or energy bar\n**Post-Workout (6-7 PM)**: Protein + carbs - chicken with sweet potato or protein shake\n**Dinner (8-9 PM)**: Light and easy to digest - fish with vegetables\n\n*Stay hydrated with 3L water throughout the day, especially around your evening workout.*", 'ai');
+                    addMessage("**Personalized Nutrition Plan** (Based on your 87% recovery and 2,450 daily calories):\\n\\n**Breakfast (7-9 AM)**: High protein (30g+) - eggs, Greek yogurt, or protein smoothie\\n**Lunch (12-2 PM)**: Balanced with complex carbs - quinoa, vegetables, lean protein\\n**Pre-Workout (3:30 PM)**: Light snack - banana with almond butter or energy bar\\n**Post-Workout (6-7 PM)**: Protein + carbs - chicken with sweet potato or protein shake\\n**Dinner (8-9 PM)**: Light and easy to digest - fish with vegetables\\n\\n*Stay hydrated with 3L water throughout the day, especially around your evening workout.*", 'ai');
                 }}
             }};
 
             window.checkMedications = async function() {{
                 addMessage("Checking your medication schedule and potential interactions...", 'system');
                 try {{
-                    const response = await fetch('/agents/process', {{
+                    const response = await fetch('/agents/process?tenant=tgaraouy', {{
                         method: 'POST',
                         headers: {{ 'Content-Type': 'application/json' }},
                         body: JSON.stringify({{ 
@@ -3549,7 +3549,7 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
                     const result = await response.json();
                     addMessage(result.message || 'Medication check completed successfully!', 'ai');
                 }} catch (error) {{
-                    addMessage("**Medication & Supplement Review**:\n\n✅ **All medications on schedule**\n✅ **No interactions detected**\n✅ **Timing optimized for your routine**\n\n**Recommendations**:\n- Take morning supplements with breakfast for better absorption\n- Evening medications should be taken 2+ hours after your workout\n- Stay consistent with timing to maintain effectiveness\n\n*Your current schedule works well with your evening workout routine.*", 'ai');
+                    addMessage("**Medication & Supplement Review**:\\n\\n✅ **All medications on schedule**\\n✅ **No interactions detected**\\n✅ **Timing optimized for your routine**\\n\\n**Recommendations**:\\n- Take morning supplements with breakfast for better absorption\\n- Evening medications should be taken 2+ hours after your workout\\n- Stay consistent with timing to maintain effectiveness\\n\\n*Your current schedule works well with your evening workout routine.*", 'ai');
                 }}
             }};
 
