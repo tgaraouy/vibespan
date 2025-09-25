@@ -767,6 +767,107 @@ async def get_whoop_data(request: Request, tenant: Optional[str] = Query(None)):
             "status": "error"
         }
 
+@app.get("/auth/whoop")
+async def whoop_auth(request: Request, tenant: Optional[str] = Query(None)):
+    """Start WHOOP OAuth2 authorization flow"""
+    tenant_id = tenant or get_tenant_from_request(request)
+    whoop_integration = get_whoop_integration(tenant_id)
+    
+    auth_url = whoop_integration.get_authorization_url()
+    if not auth_url:
+        raise HTTPException(status_code=500, detail="Failed to generate authorization URL")
+    
+    return HTMLResponse(f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>WHOOP Authorization - Vibespan.ai</title>
+        <style>
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }}
+            .container {{ background: white; border-radius: 20px; box-shadow: 0 30px 60px rgba(0,0,0,0.3); max-width: 600px; width: 100%; padding: 40px; text-align: center; }}
+            .logo {{ font-size: 2rem; font-weight: 700; color: #667eea; margin-bottom: 20px; }}
+            .title {{ font-size: 1.5rem; color: #333; margin-bottom: 20px; }}
+            .description {{ color: #666; margin-bottom: 30px; line-height: 1.6; }}
+            .scopes {{ background: #f8f9fa; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: left; }}
+            .scope-item {{ margin: 10px 0; color: #333; }}
+            .auth-btn {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; margin: 20px 0; }}
+            .auth-btn:hover {{ transform: translateY(-2px); box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); }}
+            .user-info {{ background: #e3f2fd; border-radius: 10px; padding: 15px; margin: 20px 0; color: #1976d2; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="logo">🧬 Vibespan.ai</div>
+            <h1 class="title">Connect Your WHOOP Account</h1>
+            <p class="description">
+                Authorize Vibespan.ai to access your WHOOP health data to provide personalized insights and recommendations.
+            </p>
+            
+            <div class="user-info">
+                <strong>User:</strong> {whoop_integration.user_email}<br>
+                <strong>Tenant:</strong> {tenant_id}
+            </div>
+            
+            <div class="scopes">
+                <h3>Data Access Permissions:</h3>
+                <div class="scope-item">✅ Recovery data (HRV, recovery percentage, resting heart rate)</div>
+                <div class="scope-item">✅ Sleep data (duration, efficiency, sleep stages)</div>
+                <div class="scope-item">✅ Activity data (strain, calories, steps)</div>
+                <div class="scope-item">✅ Workout data (type, duration, intensity)</div>
+                <div class="scope-item">✅ Profile data (height, weight, max heart rate)</div>
+            </div>
+            
+            <a href="{auth_url}" class="auth-btn">
+                🔗 Authorize with WHOOP
+            </a>
+            
+            <p style="color: #666; font-size: 0.9rem; margin-top: 30px;">
+                You will be redirected to WHOOP to authorize access to your health data.
+                This is secure and your data will only be used to provide personalized wellness insights.
+            </p>
+        </div>
+    </body>
+    </html>
+    """)
+
+@app.get("/auth/whoop/callback")
+async def whoop_callback(
+    request: Request,
+    code: Optional[str] = Query(None),
+    state: Optional[str] = Query(None),
+    error: Optional[str] = Query(None)
+):
+    """Handle WHOOP OAuth2 callback"""
+    if error:
+        raise HTTPException(status_code=400, detail=f"Authorization error: {error}")
+    
+    if not code:
+        raise HTTPException(status_code=400, detail="No authorization code provided")
+    
+    # Extract tenant from state
+    tenant_id = "tgaraouy"  # Default for now
+    if state and state.startswith("tenant_"):
+        tenant_id = state.replace("tenant_", "")
+    
+    whoop_integration = get_whoop_integration(tenant_id)
+    
+    # Exchange code for token
+    token_response = await whoop_integration.exchange_code_for_token(code)
+    
+    if not token_response:
+        raise HTTPException(status_code=400, detail="Failed to exchange code for token")
+    
+    return {
+        "status": "success",
+        "message": "WHOOP authorization successful",
+        "tenant_id": tenant_id,
+        "user_email": whoop_integration.user_email,
+        "access_token": token_response.get("access_token", ""),
+        "expires_in": token_response.get("expires_in", 0)
+    }
+
 @app.post("/webhook/test/{tenant_id}")
 async def test_webhook(tenant_id: str, data: dict):
     return {
