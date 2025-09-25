@@ -1037,7 +1037,7 @@ async def get_health_goals_options():
     for goal in goals:
         goal_cards_html += f'''
                     <div class="goal-card" onclick="toggleGoal('{goal["id"]}')" id="goal-{goal["id"]}">
-                        <h3><span class="icon">{goal["icon"]}</span>{goal["name"]}</h3>
+                        <h3><span class="icon">{goal["icon"]}</span>{goal["title"]}</h3>
                         <p>{goal["description"]}</p>
                     </div>
         '''
