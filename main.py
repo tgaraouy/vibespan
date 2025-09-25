@@ -2327,18 +2327,18 @@ async def get_container_provisioning():
                     <div class="progress-text" id="progress-text">0% Complete</div>
                     
                     <div class="provisioning-steps">
-                        <div class="provisioning-step completed">
-                            <div class="step-icon">✅</div>
+                        <div class="provisioning-step active">
+                            <div class="step-icon">⚙️</div>
                             <div class="step-title">Container Created</div>
                             <div class="step-description">Your isolated wellness environment is ready</div>
                         </div>
-                        <div class="provisioning-step completed">
-                            <div class="step-icon">✅</div>
+                        <div class="provisioning-step">
+                            <div class="step-icon">⏳</div>
                             <div class="step-title">Agents Deployed</div>
                             <div class="step-description">AI agents are being configured and deployed</div>
                         </div>
-                        <div class="provisioning-step active">
-                            <div class="step-icon">⚙️</div>
+                        <div class="provisioning-step">
+                            <div class="step-icon">⏳</div>
                             <div class="step-title">Services Configured</div>
                             <div class="step-description">Setting up your selected wellness services</div>
                         </div>
@@ -2413,13 +2413,13 @@ async def get_container_provisioning():
                     {{ percent: 100, text: "100% - Data Sources Connected" }}
                 ];
                 
-                // Simulate step completion
-                let currentStep = 2; // Start from step 3 (index 2)
+                // Simulate step completion with proper synchronization
+                let currentStep = 0; // Start from step 1 (index 0)
                 let progressIndex = 0;
                 
                 const stepInterval = setInterval(() => {{
                     if (currentStep < steps.length) {{
-                        // Update progress
+                        // Update progress first
                         if (progressIndex < stepProgress.length) {{
                             progressFill.style.width = stepProgress[progressIndex].percent + '%';
                             progressText.textContent = stepProgress[progressIndex].text;
@@ -2427,16 +2427,16 @@ async def get_container_provisioning():
                         }}
                         
                         // Mark current step as completed
-                        steps[currentStep - 1].classList.remove('active');
-                        steps[currentStep - 1].classList.add('completed');
-                        steps[currentStep - 1].querySelector('.step-icon').textContent = '✅';
+                        steps[currentStep].classList.remove('active');
+                        steps[currentStep].classList.add('completed');
+                        steps[currentStep].querySelector('.step-icon').textContent = '✅';
                         
                         // Activate next step
+                        currentStep++;
                         if (currentStep < steps.length) {{
                             steps[currentStep].classList.add('active');
                         }}
                         
-                        currentStep++;
                     }} else {{
                         // All steps completed
                         clearInterval(stepInterval);
