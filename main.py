@@ -1032,6 +1032,16 @@ async def get_health_goals_options():
     """Get available health goals for selection with HTML interface"""
     goals = onboarding_flow.get_health_goals_options()
     
+    # Generate goal cards HTML
+    goal_cards_html = ""
+    for goal in goals:
+        goal_cards_html += f'''
+                    <div class="goal-card" onclick="toggleGoal('{goal["id"]}')" id="goal-{goal["id"]}">
+                        <h3><span class="icon">{goal["icon"]}</span>{goal["name"]}</h3>
+                        <p>{goal["description"]}</p>
+                    </div>
+        '''
+    
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -1088,12 +1098,7 @@ async def get_health_goals_options():
                 </div>
 
                 <div class="goals-grid">
-                    {''.join([f'''
-                    <div class="goal-card" onclick="toggleGoal('{goal['id']}')" id="goal-{goal['id']}">
-                        <h3><span class="icon">{goal['icon']}</span>{goal['name']}</h3>
-                        <p>{goal['description']}</p>
-                    </div>
-                    ''' for goal in goals])}
+                    {goal_cards_html}
                 </div>
 
                 <div class="selected-count" id="selected-count">
