@@ -3528,12 +3528,18 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
                         <div class="action-description">Get nutrition recommendations for today</div>
                         <button class="action-btn">Get Advice</button>
                     </div>
-                    <div class="action-card" onclick="checkMedications()">
-                        <div class="action-icon">💊</div>
-                        <div class="action-title">Medication Check</div>
-                        <div class="action-description">Review medication timing and interactions</div>
-                        <button class="action-btn">Review</button>
-                    </div>
+                        <div class="action-card" onclick="checkMedications()">
+                            <div class="action-icon">💊</div>
+                            <div class="action-title">Medication Check</div>
+                            <div class="action-description">Review medication timing and interactions</div>
+                            <button class="action-btn">Review</button>
+                        </div>
+                        <div class="action-card" onclick="connectWhoop()">
+                            <div class="action-icon">🔗</div>
+                            <div class="action-title">Connect WHOOP</div>
+                            <div class="action-description">Link your WHOOP device for real-time health data</div>
+                            <button class="action-btn">Connect</button>
+                        </div>
                 </div>
             </div>
 
@@ -3681,6 +3687,11 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
                 }}
             }};
 
+            window.connectWhoop = function() {{
+                addMessage("🔗 **Connecting to WHOOP**\\n\\nRedirecting you to authorize Vibespan.ai to access your WHOOP health data. This is secure and your data stays private.", 'system');
+                window.location.href = '/auth/whoop?tenant=tgaraouy';
+            }};
+
             // Load health metrics - Now calling real data for tgaraouy
             async function loadHealthMetrics() {{
                 try {{
@@ -3699,6 +3710,20 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
                         addMessage('🔧 **WHOOP Integration Setup Required**\\n\\nTo see your real health data, please:\\n1. Add WHOOP_CLIENT_ID and WHOOP_CLIENT_SECRET to Vercel environment variables\\n2. Redeploy your application\\n3. Refresh this page\\n\\nYour dashboard will then show your actual WHOOP metrics!', 'system');
                         
                         console.log('WHOOP credentials missing:', result.message);
+                    }} else if (result.status === 'fallback_data') {{
+                        // Show connect WHOOP button
+                        document.getElementById('hrv').textContent = 'Connect';
+                        document.getElementById('recovery').textContent = 'WHOOP';
+                        document.getElementById('sleep').textContent = 'for';
+                        document.getElementById('strain').textContent = 'Real Data';
+                        
+                        // Add connect message to chat
+                        addMessage('🔗 **Connect Your WHOOP Account**\\n\\nYour dashboard is ready! To see your real health data:\\n1. Click the "Connect WHOOP" button below\\n2. Authorize Vibespan.ai to access your data\\n3. Your real metrics will appear instantly!\\n\\nThis is secure and your data stays private.', 'system');
+                        
+                        // Show connect button
+                        showConnectWhoopButton();
+                        
+                        console.log('WHOOP credentials available but no real data - showing connect button');
                     }} else if (result.data && result.data.metrics) {{
                         const metrics = result.data.metrics;
                         document.getElementById('hrv').textContent = metrics.hrv || '--';
@@ -3845,6 +3870,23 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
                     }}
                 }});
             }};
+
+            // Show connect WHOOP button
+            function showConnectWhoopButton() {{
+                const metricsCard = document.querySelector('.metrics-grid').parentElement;
+                const connectButton = document.createElement('div');
+                connectButton.innerHTML = `
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a href="/auth/whoop?tenant=tgaraouy" class="btn btn-primary" style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 50px; font-weight: 600; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);">
+                            🔗 Connect Your WHOOP Account
+                        </a>
+                        <p style="color: #666; font-size: 0.9rem; margin-top: 10px;">
+                            Get your real health data and personalized insights
+                        </p>
+                    </div>
+                `;
+                metricsCard.appendChild(connectButton);
+            }}
 
             // Initialize dashboard
             window.addEventListener('load', () => {{
