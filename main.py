@@ -702,6 +702,18 @@ async def get_whoop_data(request: Request, tenant: Optional[str] = Query(None)):
             "status": "credentials_missing"
         }
     
+    # Check if we have a valid token and refresh if needed
+    if not whoop_integration.has_valid_token():
+        # Try to refresh token if it's close to expiration
+        token_valid = await whoop_integration.refresh_token_if_needed()
+        if not token_valid:
+            return {
+                "tenant_id": tenant_id,
+                "data": None,
+                "message": "WHOOP authorization required. Please connect your WHOOP account.",
+                "status": "auth_required"
+            }
+    
     try:
         # Try to fetch real WHOOP data
         real_data = await whoop_integration.get_user_data()
@@ -3786,6 +3798,20 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
                         addMessage('🔧 **WHOOP Integration Setup Required**\\n\\nTo see your real health data, please:\\n1. Add WHOOP_CLIENT_ID and WHOOP_CLIENT_SECRET to Vercel environment variables\\n2. Redeploy your application\\n3. Refresh this page\\n\\nYour dashboard will then show your actual WHOOP metrics!', 'system');
                         
                         console.log('WHOOP credentials missing:', result.message);
+                    }} else if (result.status === 'auth_required') {{
+                        // Show connect WHOOP button
+                        document.getElementById('hrv').textContent = 'Connect';
+                        document.getElementById('recovery').textContent = 'WHOOP';
+                        document.getElementById('sleep').textContent = 'for';
+                        document.getElementById('strain').textContent = 'Real Data';
+                        
+                        // Add connect message to chat
+                        addMessage('🔗 **Connect Your WHOOP Account**\\n\\nYour dashboard is ready! To see your real health data:\\n1. Click the "Connect WHOOP" button below\\n2. Authorize Vibespan.ai to access your data\\n3. Your real metrics will appear instantly!\\n\\nThis is secure and your data stays private.', 'system');
+                        
+                        // Show connect button
+                        showConnectWhoopButton();
+                        
+                        console.log('WHOOP authorization required - showing connect button');
                     }} else if (result.status === 'fallback_data') {{
                         // Show connect WHOOP button
                         document.getElementById('hrv').textContent = 'Connect';

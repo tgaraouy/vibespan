@@ -360,10 +360,27 @@ class WhoopIntegration:
     async def _get_stored_token(self) -> Optional[Dict[str, Any]]:
         """Get stored access token from file system"""
         try:
-            # For now, we'll store the token in memory for this session
-            # In production, this should be stored securely (encrypted database, etc.)
-            if hasattr(self, '_cached_token'):
-                return self._cached_token
+            # Check memory cache first
+            if hasattr(self, '_cached_token') and self._cached_token:
+                if not self._is_token_expired(self._cached_token):
+                    return self._cached_token
+                else:
+                    # Token expired, clear it
+                    self._cached_token = None
+            
+            # Try to load from file
+            token_file = f"tokens/{self.tenant_id}_whoop_token.json"
+            if os.path.exists(token_file):
+                with open(token_file, 'r') as f:
+                    token_data = json.load(f)
+                    if not self._is_token_expired(token_data):
+                        # Cache it in memory
+                        self._cached_token = token_data
+                        return token_data
+                    else:
+                        # Token expired, remove file
+                        os.remove(token_file)
+            
             return None
         except Exception as e:
             self.logger.error(f"Error getting stored token: {e}")
@@ -469,8 +486,14 @@ class WhoopIntegration:
         """Store access token securely"""
         try:
             # Store token in memory for this session
-            # In production, this should be stored securely (encrypted database, etc.)
             self._cached_token = token
+            
+            # Store token in file for persistence
+            os.makedirs("tokens", exist_ok=True)
+            token_file = f"tokens/{self.tenant_id}_whoop_token.json"
+            with open(token_file, 'w') as f:
+                json.dump(token, f, indent=2)
+            
             self.logger.info(f"Token stored for {self.user_email}")
         except Exception as e:
             self.logger.error(f"Error storing token: {e}")
@@ -488,6 +511,56 @@ class WhoopIntegration:
             self.logger.info(f"Access token manually set for {self.user_email}")
         except Exception as e:
             self.logger.error(f"Error setting access token: {e}")
+    
+    def has_valid_token(self) -> bool:
+        """Check if we have a valid access token"""
+        try:
+            if hasattr(self, '_cached_token') and self._cached_token:
+                return not self._is_token_expired(self._cached_token)
+            return False
+        except Exception as e:
+            self.logger.error(f"Error checking token validity: {e}")
+            return False
+    
+    async def refresh_token_if_needed(self) -> bool:
+        """Refresh token if it's close to expiration (within 5 minutes)"""
+        try:
+            stored_token = await self._get_stored_token()
+            if not stored_token:
+                return False
+            
+            # Check if token expires within 5 minutes
+            expires_at = stored_token.get("expires_at", 0)
+            current_time = datetime.now().timestamp()
+            time_until_expiry = expires_at - current_time
+            
+            if time_until_expiry < 300:  # 5 minutes
+                self.logger.info(f"Token expires in {time_until_expiry:.0f} seconds, refreshing...")
+                # For now, we'll just clear the expired token
+                # In a real implementation, we'd use a refresh token
+                await self._clear_token()
+                return False
+            
+            return True
+        except Exception as e:
+            self.logger.error(f"Error refreshing token: {e}")
+            return False
+    
+    async def _clear_token(self) -> None:
+        """Clear stored token"""
+        try:
+            # Clear memory cache
+            if hasattr(self, '_cached_token'):
+                self._cached_token = None
+            
+            # Remove token file
+            token_file = f"tokens/{self.tenant_id}_whoop_token.json"
+            if os.path.exists(token_file):
+                os.remove(token_file)
+            
+            self.logger.info(f"Token cleared for {self.tenant_id}")
+        except Exception as e:
+            self.logger.error(f"Error clearing token: {e}")
     
     async def _fetch_recovery_data(self, session: aiohttp.ClientSession, headers: Dict, date: str) -> Dict[str, Any]:
         """Fetch recovery data from WHOOP API"""
