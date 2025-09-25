@@ -408,9 +408,7 @@ class WhoopIntegration:
     async def exchange_code_for_token(self, code: str) -> Optional[Dict[str, Any]]:
         """Exchange authorization code for access token"""
         try:
-            import base64
-            
-            # Prepare token request
+            # Prepare token request - WHOOP uses client_secret_post method
             token_data = {
                 "grant_type": "authorization_code",
                 "code": code,
@@ -424,12 +422,8 @@ class WhoopIntegration:
             self.logger.info(f"Token exchange request - Data: {token_data}")
             self.logger.info(f"Token exchange request - Client ID: {self.client_id}")
             
-            # Create basic auth header
-            credentials = f"{self.client_id}:{self.client_secret}"
-            encoded_credentials = base64.b64encode(credentials.encode()).decode()
-            
+            # WHOOP uses client_secret_post method - no Authorization header needed
             headers = {
-                "Authorization": f"Basic {encoded_credentials}",
                 "Content-Type": "application/x-www-form-urlencoded"
             }
             
