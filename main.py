@@ -1318,13 +1318,174 @@ async def get_daily_goals_options():
     </html>
     """
 
-@app.get("/onboarding/health-tools")
+@app.get("/onboarding/health-tools", response_class=HTMLResponse)
 async def get_health_tools_options():
-    """Get available health tools and devices"""
-    return {
-        "health_tools": onboarding_flow.get_health_tools_options(),
-        "message": "Select the health tools and devices you use"
-    }
+    """Get available health tools and devices with HTML interface"""
+    health_tools = onboarding_flow.get_health_tools_options()
+    
+    # Generate health tool cards HTML
+    tool_cards_html = ""
+    for tool in health_tools:
+        # Add icon based on tool type
+        icon_map = {
+            "wearable": "⌚",
+            "mobile": "📱",
+            "manual": "📝"
+        }
+        icon = icon_map.get(tool["type"], "🔧")
+        
+        # Generate features list
+        features_html = ""
+        for feature in tool["features"]:
+            features_html += f'<span class="feature-tag">{feature.replace("_", " ").title()}</span>'
+        
+        tool_cards_html += f'''
+                    <div class="tool-card" onclick="toggleTool('{tool["id"]}')" id="tool-{tool["id"]}">
+                        <div class="tool-header">
+                            <h3><span class="icon">{icon}</span>{tool["name"]}</h3>
+                            <div class="tool-type">{tool["type"].title()}</div>
+                        </div>
+                        <p class="tool-description">{tool["description"]}</p>
+                        <div class="tool-features">
+                            {features_html}
+                        </div>
+                        <div class="integration-badge">
+                            <span class="integration-type">{tool["integration"].upper()}</span>
+                        </div>
+                    </div>
+        '''
+    
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Vibespan.ai - Select Health Tools</title>
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }}
+            .container {{ background: white; border-radius: 20px; box-shadow: 0 30px 60px rgba(0,0,0,0.3); max-width: 1000px; width: 100%; overflow: hidden; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }}
+            .header h1 {{ font-size: 2.5rem; margin-bottom: 10px; }}
+            .content {{ padding: 40px; }}
+            .step-indicator {{ display: flex; justify-content: center; margin-bottom: 40px; flex-wrap: wrap; }}
+            .step {{ width: 40px; height: 40px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center; margin: 5px; font-weight: 600; color: #666; }}
+            .step.active {{ background: #667eea; color: white; }}
+            .step.completed {{ background: #28a745; color: white; }}
+            .tools-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; margin: 30px 0; }}
+            .tool-card {{ background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 15px; padding: 25px; cursor: pointer; transition: all 0.3s ease; position: relative; }}
+            .tool-card:hover {{ border-color: #667eea; transform: translateY(-5px); box-shadow: 0 15px 35px rgba(102, 126, 234, 0.15); }}
+            .tool-card.selected {{ border-color: #667eea; background: #f0f4ff; }}
+            .tool-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }}
+            .tool-header h3 {{ color: #333; display: flex; align-items: center; font-size: 1.3rem; }}
+            .tool-header .icon {{ font-size: 1.8rem; margin-right: 12px; }}
+            .tool-type {{ background: #e9ecef; color: #666; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }}
+            .tool-description {{ color: #666; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; }}
+            .tool-features {{ display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }}
+            .feature-tag {{ background: #667eea; color: white; padding: 4px 10px; border-radius: 15px; font-size: 0.75rem; font-weight: 500; }}
+            .integration-badge {{ position: absolute; top: 15px; right: 15px; }}
+            .integration-type {{ background: #28a745; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }}
+            .btn {{ padding: 15px 30px; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-block; text-align: center; margin: 10px; }}
+            .btn-primary {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); }}
+            .btn-primary:hover {{ transform: translateY(-3px); box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4); }}
+            .btn-secondary {{ background: transparent; color: #667eea; border: 2px solid #667eea; }}
+            .btn-secondary:hover {{ background: #667eea; color: white; }}
+            .btn:disabled {{ opacity: 0.5; cursor: not-allowed; }}
+            .cta-buttons {{ display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }}
+            .selected-count {{ text-align: center; margin: 20px 0; color: #667eea; font-weight: 600; }}
+            .progress-info {{ background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }}
+            .progress-info h3 {{ color: #333; margin-bottom: 10px; }}
+            .progress-info p {{ color: #666; margin-bottom: 5px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>📱 Select Your Health Tools</h1>
+                <p>Choose the health tools and devices you use for data collection</p>
+            </div>
+            
+            <div class="content">
+                <div class="step-indicator">
+                    <div class="step completed">1</div>
+                    <div class="step completed">2</div>
+                    <div class="step completed">3</div>
+                    <div class="step active">4</div>
+                    <div class="step">5</div>
+                    <div class="step">6</div>
+                    <div class="step">7</div>
+                    <div class="step">8</div>
+                    <div class="step">9</div>
+                </div>
+
+                <div class="progress-info">
+                    <h3>Step 4 of 9: Health Tools</h3>
+                    <p>Select the health tools and devices you use to collect wellness data</p>
+                </div>
+
+                <div class="tools-grid">
+                    {tool_cards_html}
+                </div>
+
+                <div class="selected-count" id="selected-count">
+                    Select at least one health tool to continue
+                </div>
+
+                <div class="cta-buttons">
+                    <button class="btn btn-primary" id="continue-btn" onclick="continueToNext()" disabled>
+                        Continue to Service Configuration →
+                    </button>
+                    <a href="/onboarding/daily-goals" class="btn btn-secondary">
+                        ← Back
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let selectedTools = [];
+            
+            function toggleTool(toolId) {{
+                const card = document.getElementById('tool-' + toolId);
+                const index = selectedTools.indexOf(toolId);
+                
+                if (index > -1) {{
+                    selectedTools.splice(index, 1);
+                    card.classList.remove('selected');
+                }} else {{
+                    selectedTools.push(toolId);
+                    card.classList.add('selected');
+                }}
+                
+                updateUI();
+            }}
+            
+            function updateUI() {{
+                const count = selectedTools.length;
+                const countEl = document.getElementById('selected-count');
+                const continueBtn = document.getElementById('continue-btn');
+                
+                if (count === 0) {{
+                    countEl.textContent = 'Select at least one health tool to continue';
+                    continueBtn.disabled = true;
+                }} else {{
+                    countEl.textContent = `${{count}} health tool${{count > 1 ? 's' : ''}} selected`;
+                    continueBtn.disabled = false;
+                }}
+            }}
+            
+            function continueToNext() {{
+                if (selectedTools.length > 0) {{
+                    // Store selected tools and continue
+                    localStorage.setItem('selected_health_tools', JSON.stringify(selectedTools));
+                    window.location.href = '/onboarding/service-configuration';
+                }}
+            }}
+        </script>
+    </body>
+    </html>
+    """
 
 @app.get("/onboarding/service-catalog")
 async def get_service_catalog():
