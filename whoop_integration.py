@@ -380,16 +380,26 @@ class WhoopIntegration:
         try:
             import urllib.parse
             
+            base_url = os.getenv('BASE_URL', 'https://vibespan.ai')
+            redirect_uri = f"{base_url}/auth/whoop/callback"
+            
             params = {
                 "response_type": "code",
                 "client_id": self.client_id,
-                "redirect_uri": f"{os.getenv('BASE_URL', 'http://localhost:8000')}/auth/whoop/callback",
+                "redirect_uri": redirect_uri,
                 "scope": " ".join(self.scopes),
                 "state": f"tenant_{self.tenant_id}"
             }
             
+            # Log the redirect URI for debugging
+            self.logger.info(f"WHOOP OAuth2 redirect URI: {redirect_uri}")
+            self.logger.info(f"WHOOP OAuth2 client ID: {self.client_id}")
+            
             query_string = urllib.parse.urlencode(params)
-            return f"{self.auth_url}?{query_string}"
+            auth_url = f"{self.auth_url}?{query_string}"
+            
+            self.logger.info(f"WHOOP OAuth2 authorization URL: {auth_url}")
+            return auth_url
             
         except Exception as e:
             self.logger.error(f"Error generating authorization URL: {e}")
@@ -404,7 +414,7 @@ class WhoopIntegration:
             token_data = {
                 "grant_type": "authorization_code",
                 "code": code,
-                "redirect_uri": f"{os.getenv('BASE_URL', 'http://localhost:8000')}/auth/whoop/callback",
+                "redirect_uri": f"{os.getenv('BASE_URL', 'https://vibespan.ai')}/auth/whoop/callback",
                 "client_id": self.client_id,
                 "client_secret": self.client_secret
             }
