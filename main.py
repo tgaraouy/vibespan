@@ -1807,7 +1807,7 @@ async def get_data_preferences():
                 </div>
 
                 <div class="preferences-grid">
-                    <div class="preference-card">
+                    <div class="preference-card" id="data-collection">
                         <h3><span class="icon">📊</span>Data Collection</h3>
                         <p>Choose how frequently and what type of data to collect</p>
                         <div class="preference-options">
@@ -1843,7 +1843,7 @@ async def get_data_preferences():
                         </div>
                     </div>
 
-                    <div class="preference-card">
+                    <div class="preference-card" id="privacy">
                         <h3><span class="icon">🔒</span>Privacy & Security</h3>
                         <p>Control how your data is stored and shared</p>
                         <div class="preference-options">
@@ -1879,7 +1879,7 @@ async def get_data_preferences():
                         </div>
                     </div>
 
-                    <div class="preference-card">
+                    <div class="preference-card" id="notifications">
                         <h3><span class="icon">🔔</span>Notifications</h3>
                         <p>Set up alerts and reminders for your wellness journey</p>
                         <div class="preference-options">
@@ -1910,7 +1910,7 @@ async def get_data_preferences():
                         </div>
                     </div>
 
-                    <div class="preference-card">
+                    <div class="preference-card" id="ai-personalization">
                         <h3><span class="icon">🤖</span>AI Personalization</h3>
                         <p>Configure how AI learns and adapts to your preferences</p>
                         <div class="preference-options">
@@ -1963,31 +1963,31 @@ async def get_data_preferences():
             }}
             
             function continueToNext() {{
-                // Collect all preferences
+                // Collect all preferences with safer selectors
                 const preferences = {{
                     dataCollection: {{
-                        realTimeMonitoring: document.querySelector('.preference-card:nth-child(1) .toggle').classList.contains('active'),
-                        frequency: document.getElementById('collection-frequency').value,
-                        includeSleep: document.querySelector('.preference-card:nth-child(1) .toggle:nth-child(2)').classList.contains('active'),
-                        includeActivity: document.querySelector('.preference-card:nth-child(1) .toggle:nth-child(3)').classList.contains('active')
+                        realTimeMonitoring: document.querySelector('#data-collection .toggle')?.classList.contains('active') || false,
+                        frequency: document.getElementById('collection-frequency')?.value || 'hourly',
+                        includeSleep: document.querySelector('#data-collection .toggle:nth-of-type(2)')?.classList.contains('active') || false,
+                        includeActivity: document.querySelector('#data-collection .toggle:nth-of-type(3)')?.classList.contains('active') || false
                     }},
                     privacy: {{
-                        encryption: document.querySelector('.preference-card:nth-child(2) .toggle').classList.contains('active'),
-                        anonymousAnalytics: document.querySelector('.preference-card:nth-child(2) .toggle:nth-child(2)').classList.contains('active'),
-                        retentionPeriod: document.getElementById('retention-period').value,
-                        exportAccess: document.querySelector('.preference-card:nth-child(2) .toggle:nth-child(4)').classList.contains('active')
+                        encryption: document.querySelector('#privacy .toggle')?.classList.contains('active') || false,
+                        anonymousAnalytics: document.querySelector('#privacy .toggle:nth-of-type(2)')?.classList.contains('active') || false,
+                        retentionPeriod: document.getElementById('retention-period')?.value || '3years',
+                        exportAccess: document.querySelector('#privacy .toggle:nth-of-type(4)')?.classList.contains('active') || false
                     }},
                     notifications: {{
-                        dailyReminders: document.querySelector('.preference-card:nth-child(3) .toggle').classList.contains('active'),
-                        healthAlerts: document.querySelector('.preference-card:nth-child(3) .toggle:nth-child(2)').classList.contains('active'),
-                        weeklyReports: document.querySelector('.preference-card:nth-child(3) .toggle:nth-child(3)').classList.contains('active'),
-                        goalMilestones: document.querySelector('.preference-card:nth-child(3) .toggle:nth-child(4)').classList.contains('active')
+                        dailyReminders: document.querySelector('#notifications .toggle')?.classList.contains('active') || false,
+                        healthAlerts: document.querySelector('#notifications .toggle:nth-of-type(2)')?.classList.contains('active') || false,
+                        weeklyReports: document.querySelector('#notifications .toggle:nth-of-type(3)')?.classList.contains('active') || false,
+                        goalMilestones: document.querySelector('#notifications .toggle:nth-of-type(4)')?.classList.contains('active') || false
                     }},
                     aiPersonalization: {{
-                        learningMode: document.getElementById('learning-mode').value,
-                        patternDetection: document.querySelector('.preference-card:nth-child(4) .toggle').classList.contains('active'),
-                        predictiveInsights: document.querySelector('.preference-card:nth-child(4) .toggle:nth-child(2)').classList.contains('active'),
-                        autoOptimization: document.querySelector('.preference-card:nth-child(4) .toggle:nth-child(3)').classList.contains('active')
+                        learningMode: document.getElementById('learning-mode')?.value || 'balanced',
+                        patternDetection: document.querySelector('#ai-personalization .toggle')?.classList.contains('active') || false,
+                        predictiveInsights: document.querySelector('#ai-personalization .toggle:nth-of-type(2)')?.classList.contains('active') || false,
+                        autoOptimization: document.querySelector('#ai-personalization .toggle:nth-of-type(3)')?.classList.contains('active') || false
                     }}
                 }};
                 
