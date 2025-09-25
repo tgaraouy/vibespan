@@ -706,29 +706,454 @@ def get_user_container(request: Request) -> Optional[Any]:
     return container_manager.get_container(tenant_id)
 
 # Comprehensive Onboarding System
-@app.get("/onboarding/start")
+@app.get("/onboarding/start", response_class=HTMLResponse)
 async def start_onboarding(request: Request, user_id: Optional[str] = Query(None)):
-    """Start comprehensive onboarding process"""
+    """Start comprehensive onboarding process with HTML interface"""
     tenant_id = user_id or get_tenant_from_request(request)
     
     # Check if container already exists
     existing_container = container_manager.get_container(tenant_id)
     if existing_container:
-        return {
-            "status": "container_exists",
-            "message": f"Container for {tenant_id} already exists",
-            "dashboard_url": existing_container.get_container_info()["dashboard_url"]
-        }
+        return f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Vibespan.ai - Already Onboarded</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background: #f4f7f6; }}
+                .container {{ max-width: 600px; margin: auto; padding: 40px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }}
+                .btn {{ background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block; margin: 10px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🌱 Welcome Back!</h1>
+                <p>Your wellness concierge is already set up and ready to go.</p>
+                <a href="{existing_container.get_container_info()['dashboard_url']}" class="btn">Go to Dashboard</a>
+                <a href="/" class="btn">Back to Home</a>
+            </div>
+        </body>
+        </html>
+        """
     
-    return onboarding_flow.start_onboarding(tenant_id)
+    onboarding_data = onboarding_flow.start_onboarding(tenant_id)
+    
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Vibespan.ai - Onboarding</title>
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
 
-@app.get("/onboarding/health-goals")
+            body {{
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }}
+
+            .onboarding-container {{
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+                max-width: 800px;
+                width: 100%;
+                overflow: hidden;
+            }}
+
+            .onboarding-header {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 40px;
+                text-align: center;
+            }}
+
+            .onboarding-header h1 {{
+                font-size: 2.5rem;
+                margin-bottom: 10px;
+            }}
+
+            .onboarding-header p {{
+                font-size: 1.2rem;
+                opacity: 0.9;
+            }}
+
+            .onboarding-content {{
+                padding: 40px;
+            }}
+
+            .step-indicator {{
+                display: flex;
+                justify-content: center;
+                margin-bottom: 40px;
+                flex-wrap: wrap;
+            }}
+
+            .step {{
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: #e9ecef;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 5px;
+                font-weight: 600;
+                color: #666;
+                position: relative;
+            }}
+
+            .step.active {{
+                background: #667eea;
+                color: white;
+            }}
+
+            .step.completed {{
+                background: #28a745;
+                color: white;
+            }}
+
+            .welcome-section {{
+                text-align: center;
+                margin-bottom: 40px;
+            }}
+
+            .welcome-section h2 {{
+                color: #333;
+                font-size: 2rem;
+                margin-bottom: 20px;
+            }}
+
+            .welcome-section p {{
+                color: #666;
+                font-size: 1.1rem;
+                line-height: 1.6;
+                margin-bottom: 30px;
+            }}
+
+            .features-preview {{
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin: 30px 0;
+            }}
+
+            .feature-preview {{
+                background: #f8f9fa;
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+                border: 2px solid #e9ecef;
+                transition: all 0.3s ease;
+            }}
+
+            .feature-preview:hover {{
+                border-color: #667eea;
+                transform: translateY(-5px);
+            }}
+
+            .feature-preview .icon {{
+                font-size: 2rem;
+                margin-bottom: 10px;
+            }}
+
+            .feature-preview h3 {{
+                color: #333;
+                margin-bottom: 10px;
+            }}
+
+            .feature-preview p {{
+                color: #666;
+                font-size: 0.9rem;
+            }}
+
+            .cta-buttons {{
+                display: flex;
+                gap: 20px;
+                justify-content: center;
+                flex-wrap: wrap;
+            }}
+
+            .btn {{
+                padding: 15px 30px;
+                border: none;
+                border-radius: 50px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-decoration: none;
+                display: inline-block;
+                text-align: center;
+            }}
+
+            .btn-primary {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            }}
+
+            .btn-primary:hover {{
+                transform: translateY(-3px);
+                box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+            }}
+
+            .btn-secondary {{
+                background: transparent;
+                color: #667eea;
+                border: 2px solid #667eea;
+            }}
+
+            .btn-secondary:hover {{
+                background: #667eea;
+                color: white;
+            }}
+
+            .progress-info {{
+                background: #f8f9fa;
+                border-radius: 12px;
+                padding: 20px;
+                margin: 20px 0;
+                text-align: center;
+            }}
+
+            .progress-info h3 {{
+                color: #333;
+                margin-bottom: 10px;
+            }}
+
+            .progress-info p {{
+                color: #666;
+                margin-bottom: 5px;
+            }}
+
+            @media (max-width: 768px) {{
+                .onboarding-container {{
+                    margin: 10px;
+                }}
+                
+                .onboarding-header {{
+                    padding: 30px 20px;
+                }}
+                
+                .onboarding-content {{
+                    padding: 30px 20px;
+                }}
+                
+                .cta-buttons {{
+                    flex-direction: column;
+                    align-items: center;
+                }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="onboarding-container">
+            <div class="onboarding-header">
+                <h1>🌱 Welcome to Vibespan.ai</h1>
+                <p>Your Personal AI Wellness Concierge</p>
+            </div>
+            
+            <div class="onboarding-content">
+                <div class="step-indicator">
+                    <div class="step active">1</div>
+                    <div class="step">2</div>
+                    <div class="step">3</div>
+                    <div class="step">4</div>
+                    <div class="step">5</div>
+                    <div class="step">6</div>
+                    <div class="step">7</div>
+                    <div class="step">8</div>
+                    <div class="step">9</div>
+                </div>
+
+                <div class="welcome-section">
+                    <h2>Let's Set Up Your Wellness Journey!</h2>
+                    <p>We'll personalize your AI wellness concierge in just a few steps. This will take about 5 minutes.</p>
+                </div>
+
+                <div class="progress-info">
+                    <h3>Step 1 of 9: Welcome</h3>
+                    <p><strong>Next Action:</strong> {onboarding_data.get('next_action', 'Set your wellness goals')}</p>
+                    <p><strong>User ID:</strong> {onboarding_data.get('user_id', 'vibespan')}</p>
+                </div>
+
+                <div class="features-preview">
+                    <div class="feature-preview">
+                        <div class="icon">🎯</div>
+                        <h3>Wellness Goals</h3>
+                        <p>Set personalized wellness objectives</p>
+                    </div>
+                    <div class="feature-preview">
+                        <div class="icon">📱</div>
+                        <h3>Health Tools</h3>
+                        <p>Connect your fitness devices</p>
+                    </div>
+                    <div class="feature-preview">
+                        <div class="icon">🤖</div>
+                        <h3>AI Concierge</h3>
+                        <p>Get personalized recommendations</p>
+                    </div>
+                    <div class="feature-preview">
+                        <div class="icon">⚡</div>
+                        <h3>Automation</h3>
+                        <p>Set & forget wellness management</p>
+                    </div>
+                </div>
+
+                <div class="cta-buttons">
+                    <a href="/onboarding/health-goals" class="btn btn-primary">
+                        🚀 Start Setup
+                    </a>
+                    <a href="/" class="btn btn-secondary">
+                        ← Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+@app.get("/onboarding/health-goals", response_class=HTMLResponse)
 async def get_health_goals_options():
-    """Get available health goals for selection"""
-    return {
-        "health_goals": onboarding_flow.get_health_goals_options(),
-        "message": "Select your health goals to personalize your experience"
-    }
+    """Get available health goals for selection with HTML interface"""
+    goals = onboarding_flow.get_health_goals_options()
+    
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Vibespan.ai - Select Wellness Goals</title>
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }}
+            .container {{ background: white; border-radius: 20px; box-shadow: 0 30px 60px rgba(0,0,0,0.3); max-width: 800px; width: 100%; overflow: hidden; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }}
+            .header h1 {{ font-size: 2.5rem; margin-bottom: 10px; }}
+            .content {{ padding: 40px; }}
+            .step-indicator {{ display: flex; justify-content: center; margin-bottom: 40px; flex-wrap: wrap; }}
+            .step {{ width: 40px; height: 40px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center; margin: 5px; font-weight: 600; color: #666; }}
+            .step.active {{ background: #667eea; color: white; }}
+            .step.completed {{ background: #28a745; color: white; }}
+            .goals-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 30px 0; }}
+            .goal-card {{ background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.3s ease; }}
+            .goal-card:hover {{ border-color: #667eea; transform: translateY(-5px); }}
+            .goal-card.selected {{ border-color: #667eea; background: #f0f4ff; }}
+            .goal-card h3 {{ color: #333; margin-bottom: 10px; display: flex; align-items: center; }}
+            .goal-card .icon {{ font-size: 1.5rem; margin-right: 10px; }}
+            .goal-card p {{ color: #666; font-size: 0.9rem; line-height: 1.4; }}
+            .btn {{ padding: 15px 30px; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-block; text-align: center; margin: 10px; }}
+            .btn-primary {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); }}
+            .btn-primary:hover {{ transform: translateY(-3px); box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4); }}
+            .btn-secondary {{ background: transparent; color: #667eea; border: 2px solid #667eea; }}
+            .btn-secondary:hover {{ background: #667eea; color: white; }}
+            .btn:disabled {{ opacity: 0.5; cursor: not-allowed; }}
+            .cta-buttons {{ display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }}
+            .selected-count {{ text-align: center; margin: 20px 0; color: #667eea; font-weight: 600; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🎯 Select Your Wellness Goals</h1>
+                <p>Choose what you want to focus on for your wellness journey</p>
+            </div>
+            
+            <div class="content">
+                <div class="step-indicator">
+                    <div class="step completed">1</div>
+                    <div class="step active">2</div>
+                    <div class="step">3</div>
+                    <div class="step">4</div>
+                    <div class="step">5</div>
+                    <div class="step">6</div>
+                    <div class="step">7</div>
+                    <div class="step">8</div>
+                    <div class="step">9</div>
+                </div>
+
+                <div class="goals-grid">
+                    {''.join([f'''
+                    <div class="goal-card" onclick="toggleGoal('{goal['id']}')" id="goal-{goal['id']}">
+                        <h3><span class="icon">{goal['icon']}</span>{goal['name']}</h3>
+                        <p>{goal['description']}</p>
+                    </div>
+                    ''' for goal in goals])}
+                </div>
+
+                <div class="selected-count" id="selected-count">
+                    Select at least one wellness goal to continue
+                </div>
+
+                <div class="cta-buttons">
+                    <button class="btn btn-primary" id="continue-btn" onclick="continueToNext()" disabled>
+                        Continue to Daily Goals →
+                    </button>
+                    <a href="/onboarding/start" class="btn btn-secondary">
+                        ← Back
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let selectedGoals = [];
+            
+            function toggleGoal(goalId) {{
+                const card = document.getElementById('goal-' + goalId);
+                const index = selectedGoals.indexOf(goalId);
+                
+                if (index > -1) {{
+                    selectedGoals.splice(index, 1);
+                    card.classList.remove('selected');
+                }} else {{
+                    selectedGoals.push(goalId);
+                    card.classList.add('selected');
+                }}
+                
+                updateUI();
+            }}
+            
+            function updateUI() {{
+                const count = selectedGoals.length;
+                const countEl = document.getElementById('selected-count');
+                const continueBtn = document.getElementById('continue-btn');
+                
+                if (count === 0) {{
+                    countEl.textContent = 'Select at least one wellness goal to continue';
+                    continueBtn.disabled = true;
+                }} else {{
+                    countEl.textContent = `${{count}} goal${{count > 1 ? 's' : ''}} selected`;
+                    continueBtn.disabled = false;
+                }}
+            }}
+            
+            function continueToNext() {{
+                if (selectedGoals.length > 0) {{
+                    // Store selected goals and continue
+                    localStorage.setItem('selected_goals', JSON.stringify(selectedGoals));
+                    window.location.href = '/onboarding/daily-goals';
+                }}
+            }}
+        </script>
+    </body>
+    </html>
+    """
 
 @app.get("/onboarding/daily-goals")
 async def get_daily_goals_options():
