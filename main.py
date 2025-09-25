@@ -3520,8 +3520,8 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
                 }}
             }}
 
-            // Chat functionality - Now calling real LLM
-            async function sendMessage() {{
+            // Chat functionality - Now calling real LLM (global scope)
+            window.sendMessage = async function() {{
                 const input = document.getElementById('chat-input');
                 const message = input.value.trim();
                 if (!message) return;
@@ -3548,7 +3548,7 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
                     const response = generateAIResponse(message);
                     addMessage(response, 'ai');
                 }}
-            }}
+            }};
 
             function addMessage(text, sender) {{
                 const messagesContainer = document.getElementById('chat-messages');
@@ -3618,20 +3618,20 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
                 return "Based on your current health metrics (85% recovery, 8.2h sleep, HRV 42), you're in excellent condition! Your evening workout preference after 4 PM aligns well with your recovery patterns. Is there something specific about your health data you'd like me to analyze or explain further?";
             }}
 
-            function handleKeyPress(event) {{
+            window.handleKeyPress = function(event) {{
                 if (event.key === 'Enter') {{
                     sendMessage();
                 }}
-            }}
+            }};
 
-            // Tab switching
-            function switchTab(tabName) {{
+            // Tab switching (global scope)
+            window.switchTab = function(tabName) {{
                 document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
                 document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
                 
                 document.getElementById(tabName + '-tab').classList.add('active');
                 event.target.classList.add('active');
-            }}
+            }};
 
             // Initialize dashboard
             window.addEventListener('load', () => {{
