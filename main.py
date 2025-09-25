@@ -3715,7 +3715,13 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
                 document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
                 
                 document.getElementById(tabName + '-tab').classList.add('active');
-                event.target.classList.add('active');
+                // Find the clicked button and make it active
+                const buttons = document.querySelectorAll('.tab-btn');
+                buttons.forEach(btn => {{
+                    if (btn.textContent.toLowerCase().includes(tabName.toLowerCase())) {{
+                        btn.classList.add('active');
+                    }}
+                }});
             }};
 
             // Initialize dashboard
