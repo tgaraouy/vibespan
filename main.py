@@ -64,7 +64,7 @@ async def root():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Vibespan.ai - Your AI Health Concierge</title>
+        <title>Vibespan.ai - Your AI Wellness Concierge</title>
         <style>
             * {
                 margin: 0;
@@ -407,15 +407,15 @@ async def root():
         <section class="hero">
             <div class="hero-content">
                 <div class="hero-text fade-in-up">
-                    <h1>🏥 Vibespan.ai</h1>
-                    <p class="subtitle">Your Personal AI Health Concierge</p>
+                    <h1>🌱 Vibespan.ai</h1>
+                    <p class="subtitle">Your Personal AI Wellness Concierge</p>
                     <p class="description">
-                        Transform your health journey with AI-powered automation, proactive monitoring, 
-                        and personalized care. Get 24/7 health management without the hassle.
+                        Transform your wellness journey with AI-powered lifestyle optimization, proactive monitoring, 
+                        and personalized wellness coaching. Get 24/7 wellness management without the hassle.
                     </p>
                     <div class="cta-buttons">
                         <a href="/onboarding/start" class="btn btn-primary">
-                            🚀 Start Your Health Journey
+                            🚀 Start Your Wellness Journey
                         </a>
                         <a href="/demo" class="btn btn-secondary">
                             📺 Watch Demo
@@ -450,11 +450,11 @@ async def root():
             <div class="stats-container">
                 <div class="stat-item">
                     <div class="stat-number">24/7</div>
-                    <div class="stat-label">AI Health Monitoring</div>
+                    <div class="stat-label">AI Wellness Monitoring</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-number">20+</div>
-                    <div class="stat-label">Health Services</div>
+                    <div class="stat-label">Wellness Services</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-number">95%</div>
@@ -462,7 +462,7 @@ async def root():
                 </div>
                 <div class="stat-item">
                     <div class="stat-number">3x</div>
-                    <div class="stat-label">Faster Health Goals</div>
+                    <div class="stat-label">Faster Wellness Goals</div>
                 </div>
             </div>
         </section>
@@ -472,44 +472,44 @@ async def root():
             <div class="features-container">
                 <h2 class="section-title">Why Choose Vibespan.ai?</h2>
                 <p class="section-subtitle">
-                    Experience the future of health management with AI-powered automation and personalized care
+                    Experience the future of wellness management with AI-powered lifestyle optimization and personalized wellness coaching
                 </p>
                 
                 <div class="features-grid">
                     <div class="feature-card">
                         <div class="feature-icon">🤖</div>
-                        <h3>AI Health Concierge</h3>
-                        <p>Your personal health assistant that works 24/7 to optimize your wellness. Get personalized recommendations, automated health monitoring, and proactive care management.</p>
+                        <h3>AI Wellness Concierge</h3>
+                        <p>Your personal wellness assistant that works 24/7 to optimize your lifestyle. Get personalized recommendations, automated wellness monitoring, and proactive lifestyle coaching.</p>
                     </div>
                     
                     <div class="feature-card">
                         <div class="feature-icon">⚡</div>
                         <h3>Set & Forget Automation</h3>
-                        <p>Minimal effort, maximum results. Our automation engine handles your health monitoring, plan optimization, and intervention scheduling automatically.</p>
+                        <p>Minimal effort, maximum results. Our automation engine handles your wellness monitoring, lifestyle optimization, and wellness coaching scheduling automatically.</p>
                     </div>
                     
                     <div class="feature-card">
                         <div class="feature-icon">📊</div>
                         <h3>Predictive Analytics</h3>
-                        <p>Stay ahead of health issues with AI-powered predictions. Get early warnings, trend analysis, and personalized insights to optimize your health journey.</p>
+                        <p>Stay ahead of wellness trends with AI-powered predictions. Get early insights, lifestyle trend analysis, and personalized recommendations to optimize your wellness journey.</p>
                     </div>
                     
                     <div class="feature-card">
                         <div class="feature-icon">🏥</div>
-                        <h3>Managed Services</h3>
-                        <p>From Basic to Enterprise, choose your service level. Get comprehensive health management with professional-grade monitoring and care.</p>
+                        <h3>Managed Wellness Services</h3>
+                        <p>From Basic to Enterprise, choose your service level. Get comprehensive wellness management with professional-grade lifestyle monitoring and wellness coaching.</p>
                     </div>
                     
                     <div class="feature-card">
                         <div class="feature-icon">🔒</div>
                         <h3>Secure & Private</h3>
-                        <p>Your health data is protected with enterprise-grade security. HIPAA-compliant, encrypted, and completely private to you.</p>
+                        <p>Your wellness data is protected with enterprise-grade security. Encrypted, secure, and completely private to you.</p>
                     </div>
                     
                     <div class="feature-card">
                         <div class="feature-icon">🎯</div>
                         <h3>Proven Results</h3>
-                        <p>Join thousands of users who've transformed their health. 3x faster goal achievement, 95% satisfaction rate, and measurable health improvements.</p>
+                        <p>Join thousands of users who've transformed their wellness. 3x faster goal achievement, 95% satisfaction rate, and measurable lifestyle improvements.</p>
                     </div>
                 </div>
             </div>
@@ -518,14 +518,35 @@ async def root():
         <!-- CTA Section -->
         <section class="cta-section">
             <div class="cta-content">
-                <h2>Ready to Transform Your Health?</h2>
-                <p>Join thousands of users who've already started their AI-powered health journey. Get started in minutes, see results in days.</p>
+                <h2>Ready to Transform Your Wellness?</h2>
+                <p>Join thousands of users who've already started their AI-powered wellness journey. Get started in minutes, see results in days.</p>
                 <a href="/onboarding/start" class="btn btn-primary" style="font-size: 1.3rem; padding: 20px 40px;">
                     🚀 Start Your Free Trial
                 </a>
                 <p style="margin-top: 20px; opacity: 0.8; font-size: 1rem;">
                     No credit card required • 14-day free trial • Cancel anytime
                 </p>
+            </div>
+        </section>
+
+        <!-- Legal Disclaimer Section -->
+        <section style="background: #f8f9fa; padding: 40px 0; border-top: 1px solid #e9ecef;">
+            <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px; text-align: center;">
+                <h3 style="color: #333; margin-bottom: 20px; font-size: 1.5rem;">Important Wellness Disclaimer</h3>
+                <div style="background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto;">
+                    <p style="color: #666; line-height: 1.6; margin-bottom: 15px; font-size: 0.95rem;">
+                        <strong>Vibespan.ai is a wellness concierge service</strong> that provides lifestyle optimization, wellness coaching, and general well-being advice. 
+                        Our services are <strong>non-clinical and non-medical</strong> in nature.
+                    </p>
+                    <p style="color: #666; line-height: 1.6; margin-bottom: 15px; font-size: 0.95rem;">
+                        <strong>We do not:</strong> Diagnose, treat, cure, or prevent any medical conditions. Provide medical advice, prescriptions, or clinical care. 
+                        Replace professional medical consultation or treatment.
+                    </p>
+                    <p style="color: #666; line-height: 1.6; font-size: 0.95rem;">
+                        <strong>Always consult with qualified healthcare professionals</strong> for medical concerns, diagnoses, or treatment decisions. 
+                        Our wellness services are designed to complement, not replace, professional medical care.
+                    </p>
+                </div>
             </div>
         </section>
     </body>

@@ -52,8 +52,8 @@ class ServiceCatalog:
         # FITNESS & PERFORMANCE SERVICES
         services["workout_planning"] = HealthService(
             "workout_planning",
-            "Workout Planning",
-            "AI-powered workout planning based on recovery and goals",
+            "Fitness Planning",
+            "AI-powered fitness planning based on recovery and wellness goals",
             "fitness",
             ["high", "medium", "low", "disabled"],
             ["recovery_tracking", "pattern_detection"]
@@ -70,8 +70,8 @@ class ServiceCatalog:
         
         services["performance_optimization"] = HealthService(
             "performance_optimization",
-            "Performance Optimization",
-            "Optimize training for peak performance",
+            "Fitness Performance Optimization",
+            "Optimize fitness training for peak wellness performance",
             "fitness",
             ["high", "medium", "low", "disabled"],
             ["recovery_tracking", "workout_planning", "pattern_detection"]
@@ -80,8 +80,8 @@ class ServiceCatalog:
         # RECOVERY & SLEEP SERVICES
         services["recovery_tracking"] = HealthService(
             "recovery_tracking",
-            "Recovery Tracking",
-            "Monitor recovery metrics and readiness",
+            "Wellness Recovery Tracking",
+            "Monitor wellness recovery metrics and readiness",
             "recovery",
             ["high", "medium", "low", "disabled"],
             []
