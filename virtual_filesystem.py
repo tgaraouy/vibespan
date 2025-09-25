@@ -219,6 +219,28 @@ class AgentContextManager:
             "total_agent_runs": len(self.get_agent_history()),
             "last_updated": datetime.now().isoformat()
         }
+    
+    def get_system_status(self) -> Dict[str, Any]:
+        """Get system status for the context manager"""
+        stats = self.vfs.get_storage_stats()
+        return {
+            "status": "active",
+            "total_files": stats["total_files"],
+            "total_size_bytes": stats["total_size_bytes"],
+            "total_size_mb": stats["total_size_mb"],
+            "categories": stats["categories"],
+            "last_updated": datetime.now().isoformat()
+        }
+    
+    def get_file_count(self, category: str) -> int:
+        """Get file count for a specific category"""
+        files = self.vfs.list_files(category)
+        return len(files)
+    
+    def get_total_files(self) -> int:
+        """Get total file count"""
+        stats = self.vfs.get_storage_stats()
+        return stats["total_files"]
 
 # Global context managers for each tenant
 _context_managers: Dict[str, AgentContextManager] = {}
