@@ -872,6 +872,12 @@ async def whoop_callback(
     if not token_response:
         raise HTTPException(status_code=400, detail="Failed to exchange code for token")
     
+    # Store the token for immediate use
+    whoop_integration.set_access_token(
+        token_response.get("access_token", ""),
+        token_response.get("expires_in", 3600)
+    )
+    
     return {
         "status": "success",
         "message": "WHOOP authorization successful",
@@ -888,6 +894,63 @@ async def test_webhook(tenant_id: str, data: dict):
         "message": f"Webhook test successful for tenant {tenant_id}",
         "tenant_id": tenant_id
     }
+
+@app.post("/api/whoop/set-token")
+async def set_whoop_token(
+    request: Request,
+    access_token: str,
+    expires_in: int = 3600,
+    tenant: Optional[str] = Query(None)
+):
+    """Manually set WHOOP access token for testing"""
+    tenant_id = tenant or get_tenant_from_request(request)
+    whoop_integration = get_whoop_integration(tenant_id)
+    
+    # Set the token
+    whoop_integration.set_access_token(access_token, expires_in)
+    
+    return {
+        "status": "success",
+        "message": "WHOOP token set successfully",
+        "tenant_id": tenant_id,
+        "user_email": whoop_integration.user_email
+    }
+
+@app.get("/api/whoop/test-real-data")
+async def test_real_whoop_data(
+    request: Request,
+    tenant: Optional[str] = Query(None)
+):
+    """Test fetching real WHOOP data with stored token"""
+    tenant_id = tenant or get_tenant_from_request(request)
+    whoop_integration = get_whoop_integration(tenant_id)
+    
+    try:
+        # Try to fetch real data
+        real_data = await whoop_integration.get_user_data()
+        
+        if real_data:
+            return {
+                "status": "success",
+                "message": "Real WHOOP data fetched successfully",
+                "tenant_id": tenant_id,
+                "data": real_data,
+                "data_source": "whoop_api_real"
+            }
+        else:
+            return {
+                "status": "error",
+                "message": "Failed to fetch real WHOOP data",
+                "tenant_id": tenant_id,
+                "data": None
+            }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Error fetching real WHOOP data: {str(e)}",
+            "tenant_id": tenant_id,
+            "data": None
+        }
 
 # Enhanced endpoints with proper tenant routing
 def get_tenant_from_request(request: Request) -> str:

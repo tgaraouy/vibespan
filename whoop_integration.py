@@ -360,8 +360,10 @@ class WhoopIntegration:
     async def _get_stored_token(self) -> Optional[Dict[str, Any]]:
         """Get stored access token from file system"""
         try:
-            # In a real implementation, this would store tokens securely
-            # For now, return None to trigger OAuth2 flow
+            # For now, we'll store the token in memory for this session
+            # In production, this should be stored securely (encrypted database, etc.)
+            if hasattr(self, '_cached_token'):
+                return self._cached_token
             return None
         except Exception as e:
             self.logger.error(f"Error getting stored token: {e}")
@@ -466,11 +468,26 @@ class WhoopIntegration:
     async def _store_token(self, token: Dict[str, Any]) -> None:
         """Store access token securely"""
         try:
-            # In a real implementation, this would store tokens securely
-            # For now, just log that we would store it
+            # Store token in memory for this session
+            # In production, this should be stored securely (encrypted database, etc.)
+            self._cached_token = token
             self.logger.info(f"Token stored for {self.user_email}")
         except Exception as e:
             self.logger.error(f"Error storing token: {e}")
+    
+    def set_access_token(self, access_token: str, expires_in: int = 3600) -> None:
+        """Manually set access token for testing"""
+        try:
+            expires_at = datetime.now().timestamp() + expires_in
+            self._cached_token = {
+                "access_token": access_token,
+                "expires_in": expires_in,
+                "expires_at": expires_at,
+                "user_email": self.user_email
+            }
+            self.logger.info(f"Access token manually set for {self.user_email}")
+        except Exception as e:
+            self.logger.error(f"Error setting access token: {e}")
     
     async def _fetch_recovery_data(self, session: aiohttp.ClientSession, headers: Dict, date: str) -> Dict[str, Any]:
         """Fetch recovery data from WHOOP API"""
