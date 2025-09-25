@@ -1814,7 +1814,7 @@ async def get_data_preferences():
                             <div class="option-group">
                                 <span class="option-label">Real-time Monitoring</span>
                                 <div class="option-controls">
-                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                    <div class="toggle active" id="real-time-monitoring" onclick="toggleOption(this)"></div>
                                 </div>
                             </div>
                             <div class="option-group">
@@ -1831,13 +1831,13 @@ async def get_data_preferences():
                             <div class="option-group">
                                 <span class="option-label">Include Sleep Data</span>
                                 <div class="option-controls">
-                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                    <div class="toggle active" id="include-sleep" onclick="toggleOption(this)"></div>
                                 </div>
                             </div>
                             <div class="option-group">
                                 <span class="option-label">Include Activity Data</span>
                                 <div class="option-controls">
-                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                    <div class="toggle active" id="include-activity" onclick="toggleOption(this)"></div>
                                 </div>
                             </div>
                         </div>
@@ -1850,13 +1850,13 @@ async def get_data_preferences():
                             <div class="option-group">
                                 <span class="option-label">Data Encryption</span>
                                 <div class="option-controls">
-                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                    <div class="toggle active" id="data-encryption" onclick="toggleOption(this)"></div>
                                 </div>
                             </div>
                             <div class="option-group">
                                 <span class="option-label">Anonymous Analytics</span>
                                 <div class="option-controls">
-                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                    <div class="toggle active" id="anonymous-analytics" onclick="toggleOption(this)"></div>
                                 </div>
                             </div>
                             <div class="option-group">
@@ -1873,7 +1873,7 @@ async def get_data_preferences():
                             <div class="option-group">
                                 <span class="option-label">Export Data Access</span>
                                 <div class="option-controls">
-                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                    <div class="toggle active" id="export-access" onclick="toggleOption(this)"></div>
                                 </div>
                             </div>
                         </div>
@@ -1886,25 +1886,25 @@ async def get_data_preferences():
                             <div class="option-group">
                                 <span class="option-label">Daily Reminders</span>
                                 <div class="option-controls">
-                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                    <div class="toggle active" id="daily-reminders" onclick="toggleOption(this)"></div>
                                 </div>
                             </div>
                             <div class="option-group">
                                 <span class="option-label">Health Alerts</span>
                                 <div class="option-controls">
-                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                    <div class="toggle active" id="health-alerts" onclick="toggleOption(this)"></div>
                                 </div>
                             </div>
                             <div class="option-group">
                                 <span class="option-label">Weekly Reports</span>
                                 <div class="option-controls">
-                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                    <div class="toggle active" id="weekly-reports" onclick="toggleOption(this)"></div>
                                 </div>
                             </div>
                             <div class="option-group">
                                 <span class="option-label">Goal Milestones</span>
                                 <div class="option-controls">
-                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                    <div class="toggle active" id="goal-milestones" onclick="toggleOption(this)"></div>
                                 </div>
                             </div>
                         </div>
@@ -1927,19 +1927,19 @@ async def get_data_preferences():
                             <div class="option-group">
                                 <span class="option-label">Pattern Detection</span>
                                 <div class="option-controls">
-                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                    <div class="toggle active" id="pattern-detection" onclick="toggleOption(this)"></div>
                                 </div>
                             </div>
                             <div class="option-group">
                                 <span class="option-label">Predictive Insights</span>
                                 <div class="option-controls">
-                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                    <div class="toggle active" id="predictive-insights" onclick="toggleOption(this)"></div>
                                 </div>
                             </div>
                             <div class="option-group">
                                 <span class="option-label">Auto-optimization</span>
                                 <div class="option-controls">
-                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                    <div class="toggle active" id="auto-optimization" onclick="toggleOption(this)"></div>
                                 </div>
                             </div>
                         </div>
@@ -1963,31 +1963,31 @@ async def get_data_preferences():
             }}
             
             function continueToNext() {{
-                // Collect all preferences with safer selectors
+                // Collect all preferences using specific IDs
                 const preferences = {{
                     dataCollection: {{
-                        realTimeMonitoring: document.querySelector('#data-collection .toggle')?.classList.contains('active') || false,
+                        realTimeMonitoring: document.getElementById('real-time-monitoring')?.classList.contains('active') || false,
                         frequency: document.getElementById('collection-frequency')?.value || 'hourly',
-                        includeSleep: document.querySelector('#data-collection .toggle:nth-of-type(2)')?.classList.contains('active') || false,
-                        includeActivity: document.querySelector('#data-collection .toggle:nth-of-type(3)')?.classList.contains('active') || false
+                        includeSleep: document.getElementById('include-sleep')?.classList.contains('active') || false,
+                        includeActivity: document.getElementById('include-activity')?.classList.contains('active') || false
                     }},
                     privacy: {{
-                        encryption: document.querySelector('#privacy .toggle')?.classList.contains('active') || false,
-                        anonymousAnalytics: document.querySelector('#privacy .toggle:nth-of-type(2)')?.classList.contains('active') || false,
+                        encryption: document.getElementById('data-encryption')?.classList.contains('active') || false,
+                        anonymousAnalytics: document.getElementById('anonymous-analytics')?.classList.contains('active') || false,
                         retentionPeriod: document.getElementById('retention-period')?.value || '3years',
-                        exportAccess: document.querySelector('#privacy .toggle:nth-of-type(4)')?.classList.contains('active') || false
+                        exportAccess: document.getElementById('export-access')?.classList.contains('active') || false
                     }},
                     notifications: {{
-                        dailyReminders: document.querySelector('#notifications .toggle')?.classList.contains('active') || false,
-                        healthAlerts: document.querySelector('#notifications .toggle:nth-of-type(2)')?.classList.contains('active') || false,
-                        weeklyReports: document.querySelector('#notifications .toggle:nth-of-type(3)')?.classList.contains('active') || false,
-                        goalMilestones: document.querySelector('#notifications .toggle:nth-of-type(4)')?.classList.contains('active') || false
+                        dailyReminders: document.getElementById('daily-reminders')?.classList.contains('active') || false,
+                        healthAlerts: document.getElementById('health-alerts')?.classList.contains('active') || false,
+                        weeklyReports: document.getElementById('weekly-reports')?.classList.contains('active') || false,
+                        goalMilestones: document.getElementById('goal-milestones')?.classList.contains('active') || false
                     }},
                     aiPersonalization: {{
                         learningMode: document.getElementById('learning-mode')?.value || 'balanced',
-                        patternDetection: document.querySelector('#ai-personalization .toggle')?.classList.contains('active') || false,
-                        predictiveInsights: document.querySelector('#ai-personalization .toggle:nth-of-type(2)')?.classList.contains('active') || false,
-                        autoOptimization: document.querySelector('#ai-personalization .toggle:nth-of-type(3)')?.classList.contains('active') || false
+                        patternDetection: document.getElementById('pattern-detection')?.classList.contains('active') || false,
+                        predictiveInsights: document.getElementById('predictive-insights')?.classList.contains('active') || false,
+                        autoOptimization: document.getElementById('auto-optimization')?.classList.contains('active') || false
                     }}
                 }};
                 
