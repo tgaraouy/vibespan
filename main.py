@@ -855,10 +855,156 @@ async def whoop_callback(
     print(f"WHOOP Callback - Code: {code}, State: {state}, Error: {error}")
     
     if error:
-        raise HTTPException(status_code=400, detail=f"Authorization error: {error}")
+        return HTMLResponse(f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>WHOOP Authorization Error - Vibespan.ai</title>
+            <style>
+                body {{ 
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); 
+                    min-height: 100vh; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    padding: 20px; 
+                    margin: 0;
+                }}
+                .container {{ 
+                    background: white; 
+                    border-radius: 20px; 
+                    box-shadow: 0 30px 60px rgba(0,0,0,0.3); 
+                    max-width: 600px; 
+                    width: 100%; 
+                    padding: 40px; 
+                    text-align: center; 
+                }}
+                .error-icon {{ 
+                    font-size: 4rem; 
+                    color: #e74c3c; 
+                    margin-bottom: 20px; 
+                }}
+                .title {{ 
+                    font-size: 2rem; 
+                    color: #333; 
+                    margin-bottom: 20px; 
+                    font-weight: 700;
+                }}
+                .message {{ 
+                    color: #666; 
+                    margin-bottom: 30px; 
+                    line-height: 1.6; 
+                    font-size: 1.1rem;
+                }}
+                .retry-btn {{ 
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    color: white; 
+                    padding: 15px 30px; 
+                    border: none; 
+                    border-radius: 50px; 
+                    font-size: 1.1rem; 
+                    font-weight: 600; 
+                    cursor: pointer; 
+                    text-decoration: none; 
+                    display: inline-block; 
+                    margin: 20px 0; 
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="error-icon">❌</div>
+                <h1 class="title">Authorization Failed</h1>
+                <p class="message">
+                    There was an error connecting your WHOOP account: <strong>{error}</strong><br><br>
+                    Please try again or contact support if the problem persists.
+                </p>
+                <a href="https://tgaraouy.vibespan.ai/dashboard" class="retry-btn">
+                    🏠 Back to Dashboard
+                </a>
+            </div>
+        </body>
+        </html>
+        """)
     
     if not code:
-        raise HTTPException(status_code=400, detail="No authorization code provided")
+        return HTMLResponse("""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>WHOOP Authorization Error - Vibespan.ai</title>
+            <style>
+                body { 
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); 
+                    min-height: 100vh; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    padding: 20px; 
+                    margin: 0;
+                }
+                .container { 
+                    background: white; 
+                    border-radius: 20px; 
+                    box-shadow: 0 30px 60px rgba(0,0,0,0.3); 
+                    max-width: 600px; 
+                    width: 100%; 
+                    padding: 40px; 
+                    text-align: center; 
+                }
+                .error-icon { 
+                    font-size: 4rem; 
+                    color: #e74c3c; 
+                    margin-bottom: 20px; 
+                }
+                .title { 
+                    font-size: 2rem; 
+                    color: #333; 
+                    margin-bottom: 20px; 
+                    font-weight: 700;
+                }
+                .message { 
+                    color: #666; 
+                    margin-bottom: 30px; 
+                    line-height: 1.6; 
+                    font-size: 1.1rem;
+                }
+                .retry-btn { 
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    color: white; 
+                    padding: 15px 30px; 
+                    border: none; 
+                    border-radius: 50px; 
+                    font-size: 1.1rem; 
+                    font-weight: 600; 
+                    cursor: pointer; 
+                    text-decoration: none; 
+                    display: inline-block; 
+                    margin: 20px 0; 
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="error-icon">❌</div>
+                <h1 class="title">Authorization Failed</h1>
+                <p class="message">
+                    No authorization code received from WHOOP.<br><br>
+                    Please try connecting your WHOOP account again.
+                </p>
+                <a href="https://tgaraouy.vibespan.ai/dashboard" class="retry-btn">
+                    🏠 Back to Dashboard
+                </a>
+            </div>
+        </body>
+        </html>
+        """)
     
     # Extract tenant from state
     tenant_id = "tgaraouy"  # Default for now
@@ -879,10 +1025,156 @@ async def whoop_callback(
         print(f"Token response: {token_response}")
     except Exception as e:
         print(f"Token exchange error: {e}")
-        raise HTTPException(status_code=500, detail=f"Token exchange error: {str(e)}")
+        return HTMLResponse(f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>WHOOP Connection Error - Vibespan.ai</title>
+            <style>
+                body {{ 
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); 
+                    min-height: 100vh; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    padding: 20px; 
+                    margin: 0;
+                }}
+                .container {{ 
+                    background: white; 
+                    border-radius: 20px; 
+                    box-shadow: 0 30px 60px rgba(0,0,0,0.3); 
+                    max-width: 600px; 
+                    width: 100%; 
+                    padding: 40px; 
+                    text-align: center; 
+                }}
+                .error-icon {{ 
+                    font-size: 4rem; 
+                    color: #e74c3c; 
+                    margin-bottom: 20px; 
+                }}
+                .title {{ 
+                    font-size: 2rem; 
+                    color: #333; 
+                    margin-bottom: 20px; 
+                    font-weight: 700;
+                }}
+                .message {{ 
+                    color: #666; 
+                    margin-bottom: 30px; 
+                    line-height: 1.6; 
+                    font-size: 1.1rem;
+                }}
+                .retry-btn {{ 
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    color: white; 
+                    padding: 15px 30px; 
+                    border: none; 
+                    border-radius: 50px; 
+                    font-size: 1.1rem; 
+                    font-weight: 600; 
+                    cursor: pointer; 
+                    text-decoration: none; 
+                    display: inline-block; 
+                    margin: 20px 0; 
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="error-icon">⚠️</div>
+                <h1 class="title">Connection Error</h1>
+                <p class="message">
+                    There was an error connecting to WHOOP: <strong>{str(e)}</strong><br><br>
+                    Please try again or contact support if the problem persists.
+                </p>
+                <a href="https://tgaraouy.vibespan.ai/dashboard" class="retry-btn">
+                    🏠 Back to Dashboard
+                </a>
+            </div>
+        </body>
+        </html>
+        """)
     
     if not token_response:
-        raise HTTPException(status_code=400, detail="Failed to exchange code for token")
+        return HTMLResponse("""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>WHOOP Connection Failed - Vibespan.ai</title>
+            <style>
+                body { 
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); 
+                    min-height: 100vh; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    padding: 20px; 
+                    margin: 0;
+                }
+                .container { 
+                    background: white; 
+                    border-radius: 20px; 
+                    box-shadow: 0 30px 60px rgba(0,0,0,0.3); 
+                    max-width: 600px; 
+                    width: 100%; 
+                    padding: 40px; 
+                    text-align: center; 
+                }
+                .error-icon { 
+                    font-size: 4rem; 
+                    color: #e74c3c; 
+                    margin-bottom: 20px; 
+                }
+                .title { 
+                    font-size: 2rem; 
+                    color: #333; 
+                    margin-bottom: 20px; 
+                    font-weight: 700;
+                }
+                .message { 
+                    color: #666; 
+                    margin-bottom: 30px; 
+                    line-height: 1.6; 
+                    font-size: 1.1rem;
+                }
+                .retry-btn { 
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    color: white; 
+                    padding: 15px 30px; 
+                    border: none; 
+                    border-radius: 50px; 
+                    font-size: 1.1rem; 
+                    font-weight: 600; 
+                    cursor: pointer; 
+                    text-decoration: none; 
+                    display: inline-block; 
+                    margin: 20px 0; 
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="error-icon">❌</div>
+                <h1 class="title">Connection Failed</h1>
+                <p class="message">
+                    Failed to exchange authorization code for access token.<br><br>
+                    Please try connecting your WHOOP account again.
+                </p>
+                <a href="https://tgaraouy.vibespan.ai/dashboard" class="retry-btn">
+                    🏠 Back to Dashboard
+                </a>
+            </div>
+        </body>
+        </html>
+        """)
     
     # Store the token for immediate use
     whoop_integration.set_access_token(
@@ -890,14 +1182,123 @@ async def whoop_callback(
         token_response.get("expires_in", 3600)
     )
     
-    return {
-        "status": "success",
-        "message": "WHOOP authorization successful",
-        "tenant_id": tenant_id,
-        "user_email": whoop_integration.user_email,
-        "access_token": token_response.get("access_token", ""),
-        "expires_in": token_response.get("expires_in", 0)
-    }
+    # Redirect user back to dashboard with success message
+    return HTMLResponse(f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>WHOOP Connected - Vibespan.ai</title>
+        <style>
+            body {{ 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                min-height: 100vh; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                padding: 20px; 
+                margin: 0;
+            }}
+            .container {{ 
+                background: white; 
+                border-radius: 20px; 
+                box-shadow: 0 30px 60px rgba(0,0,0,0.3); 
+                max-width: 600px; 
+                width: 100%; 
+                padding: 40px; 
+                text-align: center; 
+            }}
+            .success-icon {{ 
+                font-size: 4rem; 
+                color: #4CAF50; 
+                margin-bottom: 20px; 
+            }}
+            .title {{ 
+                font-size: 2rem; 
+                color: #333; 
+                margin-bottom: 20px; 
+                font-weight: 700;
+            }}
+            .message {{ 
+                color: #666; 
+                margin-bottom: 30px; 
+                line-height: 1.6; 
+                font-size: 1.1rem;
+            }}
+            .user-info {{ 
+                background: #e8f5e8; 
+                border-radius: 10px; 
+                padding: 20px; 
+                margin: 20px 0; 
+                color: #2e7d32; 
+            }}
+            .dashboard-btn {{ 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                color: white; 
+                padding: 15px 30px; 
+                border: none; 
+                border-radius: 50px; 
+                font-size: 1.1rem; 
+                font-weight: 600; 
+                cursor: pointer; 
+                text-decoration: none; 
+                display: inline-block; 
+                margin: 20px 0; 
+                transition: transform 0.2s;
+            }}
+            .dashboard-btn:hover {{ 
+                transform: translateY(-2px); 
+                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); 
+            }}
+            .loading {{ 
+                display: none; 
+                margin-top: 20px; 
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="success-icon">✅</div>
+            <h1 class="title">WHOOP Connected Successfully!</h1>
+            <p class="message">
+                Your WHOOP account has been connected to Vibespan.ai. 
+                You can now see your real health data and get personalized insights.
+            </p>
+            
+            <div class="user-info">
+                <strong>Connected Account:</strong> {whoop_integration.user_email}<br>
+                <strong>Tenant:</strong> {tenant_id}<br>
+                <strong>Status:</strong> Active and Ready
+            </div>
+            
+            <a href="https://tgaraouy.vibespan.ai/dashboard" class="dashboard-btn" onclick="showLoading()">
+                🏠 Go to Dashboard
+            </a>
+            
+            <div class="loading" id="loading">
+                <p>Redirecting to your dashboard...</p>
+            </div>
+        </div>
+        
+        <script>
+            function showLoading() {{
+                document.getElementById('loading').style.display = 'block';
+                // Auto-redirect after 2 seconds
+                setTimeout(() => {{
+                    window.location.href = 'https://tgaraouy.vibespan.ai/dashboard';
+                }}, 2000);
+            }}
+            
+            // Auto-redirect after 5 seconds if user doesn't click
+            setTimeout(() => {{
+                showLoading();
+            }}, 5000);
+        </script>
+    </body>
+    </html>
+    """)
 
 @app.post("/webhook/test/{tenant_id}")
 async def test_webhook(tenant_id: str, data: dict):
