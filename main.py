@@ -2000,6 +2000,238 @@ async def get_data_preferences():
     </html>
     """
 
+@app.get("/onboarding/template-selection", response_class=HTMLResponse)
+async def get_template_selection():
+    """Get template selection with HTML interface"""
+    templates = onboarding_flow.get_health_templates()
+    hybrid_templates = service_catalog.get_hybrid_templates()
+    
+    # Generate template cards HTML
+    template_cards_html = ""
+    for template_id, template in templates.items():
+        # Add icon based on template type
+        icon_map = {
+            "fitness_enthusiast": "💪",
+            "wellness_focused": "🌱",
+            "health_optimizer": "🧬"
+        }
+        icon = icon_map.get(template_id, "📋")
+        
+        # Get default goals and tools for display
+        default_goals = template.get("default_goals", [])
+        default_tools = template.get("default_tools", [])
+        default_actions = template.get("default_actions", [])
+        
+        template_cards_html += f'''
+                    <div class="template-card" onclick="selectTemplate('{template_id}')" id="template-{template_id}">
+                        <div class="template-header">
+                            <h3><span class="icon">{icon}</span>{template["name"]}</h3>
+                            <div class="template-type">Health Template</div>
+                        </div>
+                        <p class="template-description">{template["description"]}</p>
+                        <div class="template-features">
+                            <div class="feature-count">{len(default_goals)} goals, {len(default_tools)} tools</div>
+                            <div class="data-points">
+                                Goals: {', '.join(default_goals[:2])}{'...' if len(default_goals) > 2 else ''}
+                            </div>
+                            <div class="data-points">
+                                Tools: {', '.join(default_tools[:2])}{'...' if len(default_tools) > 2 else ''}
+                            </div>
+                        </div>
+                    </div>
+        '''
+    
+    # Generate hybrid template options
+    hybrid_template_cards_html = ""
+    for template_id, template in hybrid_templates.items():
+        hybrid_template_cards_html += f'''
+                    <div class="template-card" onclick="selectHybridTemplate('{template_id}')" id="hybrid-{template_id}">
+                        <div class="template-header">
+                            <h3><span class="icon">⚡</span>{template["name"]}</h3>
+                            <div class="template-type">Hybrid Template</div>
+                        </div>
+                        <p class="template-description">{template["description"]}</p>
+                        <div class="template-features">
+                            <div class="feature-count">{len(template["services"])} services included</div>
+                            <div class="service-list">
+                                {', '.join(list(template["services"].keys())[:3])}{'...' if len(template["services"]) > 3 else ''}
+                            </div>
+                        </div>
+                    </div>
+        '''
+    
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Vibespan.ai - Template Selection</title>
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }}
+            .container {{ background: white; border-radius: 20px; box-shadow: 0 30px 60px rgba(0,0,0,0.3); max-width: 1200px; width: 100%; overflow: hidden; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }}
+            .header h1 {{ font-size: 2.5rem; margin-bottom: 10px; }}
+            .content {{ padding: 40px; }}
+            .step-indicator {{ display: flex; justify-content: center; margin-bottom: 40px; flex-wrap: wrap; }}
+            .step {{ width: 40px; height: 40px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center; margin: 5px; font-weight: 600; color: #666; }}
+            .step.active {{ background: #667eea; color: white; }}
+            .step.completed {{ background: #28a745; color: white; }}
+            .tabs {{ display: flex; margin-bottom: 30px; border-bottom: 2px solid #e9ecef; }}
+            .tab {{ padding: 15px 30px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s ease; }}
+            .tab.active {{ border-bottom-color: #667eea; color: #667eea; font-weight: 600; }}
+            .tab-content {{ display: none; }}
+            .tab-content.active {{ display: block; }}
+            .templates-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; margin: 30px 0; }}
+            .template-card {{ background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 15px; padding: 25px; cursor: pointer; transition: all 0.3s ease; }}
+            .template-card:hover {{ border-color: #667eea; transform: translateY(-5px); box-shadow: 0 15px 35px rgba(102, 126, 234, 0.15); }}
+            .template-card.selected {{ border-color: #667eea; background: #f0f4ff; }}
+            .template-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }}
+            .template-header h3 {{ color: #333; display: flex; align-items: center; font-size: 1.3rem; }}
+            .template-header .icon {{ font-size: 1.8rem; margin-right: 12px; }}
+            .template-type {{ background: #e9ecef; color: #666; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }}
+            .template-description {{ color: #666; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; }}
+            .template-features {{ display: flex; flex-direction: column; gap: 10px; }}
+            .feature-count {{ background: #667eea; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; width: fit-content; }}
+            .data-points, .service-list {{ color: #666; font-size: 0.85rem; font-style: italic; }}
+            .btn {{ padding: 15px 30px; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-block; text-align: center; margin: 10px; }}
+            .btn-primary {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); }}
+            .btn-primary:hover {{ transform: translateY(-3px); box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4); }}
+            .btn-secondary {{ background: transparent; color: #667eea; border: 2px solid #667eea; }}
+            .btn-secondary:hover {{ background: #667eea; color: white; }}
+            .btn:disabled {{ opacity: 0.5; cursor: not-allowed; }}
+            .cta-buttons {{ display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }}
+            .selected-count {{ text-align: center; margin: 20px 0; color: #667eea; font-weight: 600; }}
+            .progress-info {{ background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }}
+            .progress-info h3 {{ color: #333; margin-bottom: 10px; }}
+            .progress-info p {{ color: #666; margin-bottom: 5px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>📋 Select Your Template</h1>
+                <p>Choose your health data collection template</p>
+            </div>
+            
+            <div class="content">
+                <div class="step-indicator">
+                    <div class="step completed">1</div>
+                    <div class="step completed">2</div>
+                    <div class="step completed">3</div>
+                    <div class="step completed">4</div>
+                    <div class="step completed">5</div>
+                    <div class="step completed">6</div>
+                    <div class="step active">7</div>
+                    <div class="step">8</div>
+                    <div class="step">9</div>
+                </div>
+
+                <div class="progress-info">
+                    <h3>Step 7 of 9: Template Selection</h3>
+                    <p>Choose your health data collection template and configuration</p>
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('data-templates')">Data Templates</div>
+                    <div class="tab" onclick="switchTab('hybrid-templates')">Hybrid Templates</div>
+                </div>
+
+                <div id="data-templates-tab" class="tab-content active">
+                    <div class="templates-grid">
+                        {template_cards_html}
+                    </div>
+                </div>
+
+                <div id="hybrid-templates-tab" class="tab-content">
+                    <div class="templates-grid">
+                        {hybrid_template_cards_html}
+                    </div>
+                </div>
+
+                <div class="selected-count" id="selected-count">
+                    Select a template to continue
+                </div>
+
+                <div class="cta-buttons">
+                    <button class="btn btn-primary" id="continue-btn" onclick="continueToNext()" disabled>
+                        Continue to Container Provisioning →
+                    </button>
+                    <a href="/onboarding/data-preferences" class="btn btn-secondary">
+                        ← Back
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let selectedTemplate = null;
+            let selectedHybridTemplate = null;
+            
+            function switchTab(tabName) {{
+                // Hide all tab contents
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                
+                // Show selected tab
+                document.getElementById(tabName + '-tab').classList.add('active');
+                event.target.classList.add('active');
+            }}
+            
+            function selectTemplate(templateId) {{
+                selectedTemplate = templateId;
+                selectedHybridTemplate = null;
+                
+                // Remove all selections
+                document.querySelectorAll('.template-card').forEach(card => card.classList.remove('selected'));
+                
+                // Select current template
+                document.getElementById('template-' + templateId).classList.add('selected');
+                
+                updateUI();
+            }}
+            
+            function selectHybridTemplate(templateId) {{
+                selectedHybridTemplate = templateId;
+                selectedTemplate = null;
+                
+                // Remove all selections
+                document.querySelectorAll('.template-card').forEach(card => card.classList.remove('selected'));
+                
+                // Select current template
+                document.getElementById('hybrid-' + templateId).classList.add('selected');
+                
+                updateUI();
+            }}
+            
+            function updateUI() {{
+                const countEl = document.getElementById('selected-count');
+                const continueBtn = document.getElementById('continue-btn');
+                
+                if (selectedTemplate || selectedHybridTemplate) {{
+                    const templateName = selectedTemplate || selectedHybridTemplate;
+                    countEl.textContent = `Selected: ${{templateName.replace('_', ' ').replace('-', ' ')}}`;
+                    continueBtn.disabled = false;
+                }} else {{
+                    countEl.textContent = 'Select a template to continue';
+                    continueBtn.disabled = true;
+                }}
+            }}
+            
+            function continueToNext() {{
+                if (selectedTemplate || selectedHybridTemplate) {{
+                    // Store selected template and continue
+                    localStorage.setItem('selected_template', selectedTemplate);
+                    localStorage.setItem('selected_hybrid_template', selectedHybridTemplate);
+                    window.location.href = '/onboarding/container-provisioning';
+                }}
+            }}
+        </script>
+    </body>
+    </html>
+    """
+
 @app.get("/onboarding/hybrid-templates")
 async def get_hybrid_templates():
     """Get hybrid template combinations"""
