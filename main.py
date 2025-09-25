@@ -1160,13 +1160,163 @@ async def get_health_goals_options():
     </html>
     """
 
-@app.get("/onboarding/daily-goals")
+@app.get("/onboarding/daily-goals", response_class=HTMLResponse)
 async def get_daily_goals_options():
-    """Get available daily goals for selection"""
-    return {
-        "daily_goals": onboarding_flow.get_daily_goals_options(),
-        "message": "Choose your daily habits for consistency tracking"
-    }
+    """Get available daily goals for selection with HTML interface"""
+    daily_goals = onboarding_flow.get_daily_goals_options()
+    
+    # Generate daily goal cards HTML
+    goal_cards_html = ""
+    for goal in daily_goals:
+        # Add icon based on category
+        icon_map = {
+            "sleep": "😴",
+            "exercise": "🏃",
+            "nutrition": "🥗",
+            "wellness": "🧘",
+            "recovery": "⚡"
+        }
+        icon = icon_map.get(goal["category"], "📅")
+        
+        goal_cards_html += f'''
+                    <div class="goal-card" onclick="toggleGoal('{goal["id"]}')" id="goal-{goal["id"]}">
+                        <h3><span class="icon">{icon}</span>{goal["title"]}</h3>
+                        <p>{goal["description"]}</p>
+                        <div class="goal-meta">
+                            <span class="category">{goal["category"]}</span>
+                            <span class="frequency">{goal["frequency"]}</span>
+                        </div>
+                    </div>
+        '''
+    
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Vibespan.ai - Select Daily Goals</title>
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }}
+            .container {{ background: white; border-radius: 20px; box-shadow: 0 30px 60px rgba(0,0,0,0.3); max-width: 900px; width: 100%; overflow: hidden; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }}
+            .header h1 {{ font-size: 2.5rem; margin-bottom: 10px; }}
+            .content {{ padding: 40px; }}
+            .step-indicator {{ display: flex; justify-content: center; margin-bottom: 40px; flex-wrap: wrap; }}
+            .step {{ width: 40px; height: 40px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center; margin: 5px; font-weight: 600; color: #666; }}
+            .step.active {{ background: #667eea; color: white; }}
+            .step.completed {{ background: #28a745; color: white; }}
+            .goals-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin: 30px 0; }}
+            .goal-card {{ background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 12px; padding: 25px; cursor: pointer; transition: all 0.3s ease; position: relative; }}
+            .goal-card:hover {{ border-color: #667eea; transform: translateY(-5px); box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15); }}
+            .goal-card.selected {{ border-color: #667eea; background: #f0f4ff; }}
+            .goal-card h3 {{ color: #333; margin-bottom: 15px; display: flex; align-items: center; }}
+            .goal-card .icon {{ font-size: 1.8rem; margin-right: 12px; }}
+            .goal-card p {{ color: #666; font-size: 0.95rem; line-height: 1.5; margin-bottom: 15px; }}
+            .goal-meta {{ display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e9ecef; }}
+            .category {{ background: #667eea; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }}
+            .frequency {{ color: #666; font-size: 0.85rem; font-weight: 500; }}
+            .btn {{ padding: 15px 30px; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-block; text-align: center; margin: 10px; }}
+            .btn-primary {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); }}
+            .btn-primary:hover {{ transform: translateY(-3px); box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4); }}
+            .btn-secondary {{ background: transparent; color: #667eea; border: 2px solid #667eea; }}
+            .btn-secondary:hover {{ background: #667eea; color: white; }}
+            .btn:disabled {{ opacity: 0.5; cursor: not-allowed; }}
+            .cta-buttons {{ display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }}
+            .selected-count {{ text-align: center; margin: 20px 0; color: #667eea; font-weight: 600; }}
+            .progress-info {{ background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }}
+            .progress-info h3 {{ color: #333; margin-bottom: 10px; }}
+            .progress-info p {{ color: #666; margin-bottom: 5px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>📅 Select Your Daily Goals</h1>
+                <p>Choose your daily habits for consistency tracking</p>
+            </div>
+            
+            <div class="content">
+                <div class="step-indicator">
+                    <div class="step completed">1</div>
+                    <div class="step completed">2</div>
+                    <div class="step active">3</div>
+                    <div class="step">4</div>
+                    <div class="step">5</div>
+                    <div class="step">6</div>
+                    <div class="step">7</div>
+                    <div class="step">8</div>
+                    <div class="step">9</div>
+                </div>
+
+                <div class="progress-info">
+                    <h3>Step 3 of 9: Daily Goals</h3>
+                    <p>Select the daily habits you want to track and maintain consistently</p>
+                </div>
+
+                <div class="goals-grid">
+                    {goal_cards_html}
+                </div>
+
+                <div class="selected-count" id="selected-count">
+                    Select at least one daily goal to continue
+                </div>
+
+                <div class="cta-buttons">
+                    <button class="btn btn-primary" id="continue-btn" onclick="continueToNext()" disabled>
+                        Continue to Health Tools →
+                    </button>
+                    <a href="/onboarding/health-goals" class="btn btn-secondary">
+                        ← Back
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let selectedGoals = [];
+            
+            function toggleGoal(goalId) {{
+                const card = document.getElementById('goal-' + goalId);
+                const index = selectedGoals.indexOf(goalId);
+                
+                if (index > -1) {{
+                    selectedGoals.splice(index, 1);
+                    card.classList.remove('selected');
+                }} else {{
+                    selectedGoals.push(goalId);
+                    card.classList.add('selected');
+                }}
+                
+                updateUI();
+            }}
+            
+            function updateUI() {{
+                const count = selectedGoals.length;
+                const countEl = document.getElementById('selected-count');
+                const continueBtn = document.getElementById('continue-btn');
+                
+                if (count === 0) {{
+                    countEl.textContent = 'Select at least one daily goal to continue';
+                    continueBtn.disabled = true;
+                }} else {{
+                    countEl.textContent = `${{count}} daily goal${{count > 1 ? 's' : ''}} selected`;
+                    continueBtn.disabled = false;
+                }}
+            }}
+            
+            function continueToNext() {{
+                if (selectedGoals.length > 0) {{
+                    // Store selected goals and continue
+                    localStorage.setItem('selected_daily_goals', JSON.stringify(selectedGoals));
+                    window.location.href = '/onboarding/health-tools';
+                }}
+            }}
+        </script>
+    </body>
+    </html>
+    """
 
 @app.get("/onboarding/health-tools")
 async def get_health_tools_options():
