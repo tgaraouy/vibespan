@@ -259,6 +259,23 @@ class WhoopIntegration:
                 "resting_heart_rate"
             ]
         }
+    
+    async def get_user_data(self) -> Optional[Dict[str, Any]]:
+        """Fetch real user data from WHOOP API"""
+        try:
+            # This would need OAuth2 flow implementation
+            # For now, return None to indicate no real data available
+            self.logger.info(f"Attempting to fetch real WHOOP data for tenant {self.tenant_id}")
+            
+            # TODO: Implement OAuth2 flow to get access token
+            # TODO: Make API calls to WHOOP endpoints
+            # TODO: Parse and return real data
+            
+            return None  # No real data available yet
+            
+        except Exception as e:
+            self.logger.error(f"Error fetching WHOOP data: {e}")
+            return None
 
 # Global WHOOP integrations for each tenant
 _whoop_integrations: Dict[str, WhoopIntegration] = {}

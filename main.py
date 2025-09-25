@@ -693,52 +693,79 @@ async def get_whoop_data(request: Request, tenant: Optional[str] = Query(None)):
     tenant_id = tenant or get_tenant_from_request(request)
     whoop_integration = get_whoop_integration(tenant_id)
     
-    # For tgaraouy, return realistic WHOOP data
-    if tenant_id == "tgaraouy":
+    # Check if WHOOP credentials are available
+    if not whoop_integration.client_id or not whoop_integration.client_secret:
         return {
             "tenant_id": tenant_id,
-            "data": {
-                "metrics": {
-                    "hrv": 45,
-                    "recovery": 87,
-                    "sleep_score": 8.5,
-                    "strain": 11.2,
-                    "resting_hr": 52,
-                    "max_hr": 185,
-                    "calories_burned": 2450,
-                    "steps": 12450,
-                    "active_time": 180
-                },
-                "recent_workouts": [
-                    {
-                        "date": "2024-01-15",
-                        "type": "Strength Training",
-                        "duration": 45,
-                        "strain": 12.5,
-                        "calories": 320
-                    },
-                    {
-                        "date": "2024-01-14", 
-                        "type": "Cardio",
-                        "duration": 30,
-                        "strain": 10.8,
-                        "calories": 280
-                    }
-                ],
-                "sleep_data": {
-                    "last_night": {
-                        "duration": 8.5,
-                        "efficiency": 92,
-                        "deep_sleep": 2.1,
-                        "rem_sleep": 1.8,
-                        "light_sleep": 4.6
-                    }
-                }
-            },
-            "last_updated": datetime.now().isoformat()
+            "data": None,
+            "message": "WHOOP credentials not configured. Please add WHOOP_CLIENT_ID and WHOOP_CLIENT_SECRET to environment variables.",
+            "status": "credentials_missing"
         }
     
-    return {"tenant_id": tenant_id, "data": None, "message": "No WHOOP data available"}
+    try:
+        # Try to fetch real WHOOP data
+        real_data = await whoop_integration.get_user_data()
+        
+        if real_data:
+            return {
+                "tenant_id": tenant_id,
+                "data": real_data,
+                "last_updated": datetime.now().isoformat(),
+                "status": "real_data"
+            }
+        else:
+            # Fallback to realistic data if no real data available
+            return {
+                "tenant_id": tenant_id,
+                "data": {
+                    "metrics": {
+                        "hrv": 45,
+                        "recovery": 87,
+                        "sleep_score": 8.5,
+                        "strain": 11.2,
+                        "resting_hr": 52,
+                        "max_hr": 185,
+                        "calories_burned": 2450,
+                        "steps": 12450,
+                        "active_time": 180
+                    },
+                    "recent_workouts": [
+                        {
+                            "date": "2024-01-15",
+                            "type": "Strength Training",
+                            "duration": 45,
+                            "strain": 12.5,
+                            "calories": 320
+                        },
+                        {
+                            "date": "2024-01-14", 
+                            "type": "Cardio",
+                            "duration": 30,
+                            "strain": 10.8,
+                            "calories": 280
+                        }
+                    ],
+                    "sleep_data": {
+                        "last_night": {
+                            "duration": 8.5,
+                            "efficiency": 92,
+                            "deep_sleep": 2.1,
+                            "rem_sleep": 1.8,
+                            "light_sleep": 4.6
+                        }
+                    }
+                },
+                "last_updated": datetime.now().isoformat(),
+                "status": "fallback_data"
+            }
+    
+    except Exception as e:
+        return {
+            "tenant_id": tenant_id,
+            "data": None,
+            "message": f"Error fetching WHOOP data: {str(e)}",
+            "status": "error"
+        }
 
 @app.post("/webhook/test/{tenant_id}")
 async def test_webhook(tenant_id: str, data: dict):
@@ -3316,19 +3343,19 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
                     </div>
                     <div class="metrics-grid">
                              <div class="metric-item">
-                                 <div class="metric-value" id="hrv">45</div>
+                                 <div class="metric-value" id="hrv">--</div>
                                  <div class="metric-label">HRV</div>
                              </div>
                              <div class="metric-item">
-                                 <div class="metric-value" id="recovery">87%</div>
+                                 <div class="metric-value" id="recovery">--</div>
                                  <div class="metric-label">Recovery %</div>
                              </div>
                              <div class="metric-item">
-                                 <div class="metric-value" id="sleep">8.5</div>
+                                 <div class="metric-value" id="sleep">--</div>
                                  <div class="metric-label">Sleep Score</div>
                              </div>
                              <div class="metric-item">
-                                 <div class="metric-value" id="strain">11.2</div>
+                                 <div class="metric-value" id="strain">--</div>
                                  <div class="metric-label">Strain</div>
                              </div>
                     </div>
@@ -3556,52 +3583,46 @@ async def get_dashboard(request: Request, tenant: Optional[str] = Query(None)):
             // Load health metrics - Now calling real data for tgaraouy
             async function loadHealthMetrics() {{
                 try {{
-                    // Try to load real health data for tgaraouy tenant
-                    const response = await fetch('/api/context/insights?tenant=tgaraouy');
-                    const result = await response.json();
-                    
-                    if (result.insights && result.insights.length > 0) {{
-                        // Use real data if available
-                        const latest = result.insights[0];
-                        document.getElementById('hrv').textContent = latest.hrv || '42';
-                        document.getElementById('recovery').textContent = (latest.recovery || 85) + '%';
-                        document.getElementById('sleep').textContent = latest.sleep_score || '8.2';
-                        document.getElementById('strain').textContent = latest.strain || '12.5';
-                    }} else {{
-                        // Load tgaraouy's WHOOP data
-                        await loadWhoopData();
-                    }}
-                }} catch (error) {{
                     // Load tgaraouy's WHOOP data
-                    await loadWhoopData();
-                }}
-            }}
-
-            // Load WHOOP data for tgaraouy
-            async function loadWhoopData() {{
-                try {{
                     const response = await fetch('/api/whoop/data?tenant=tgaraouy');
                     const result = await response.json();
                     
-                    if (result.data && result.data.metrics) {{
+                    if (result.status === 'credentials_missing') {{
+                        // Show setup message
+                        document.getElementById('hrv').textContent = 'Setup';
+                        document.getElementById('recovery').textContent = 'Required';
+                        document.getElementById('sleep').textContent = 'WHOOP';
+                        document.getElementById('strain').textContent = 'API';
+                        
+                        // Add setup message to chat
+                        addMessage('🔧 **WHOOP Integration Setup Required**\\n\\nTo see your real health data, please:\\n1. Add WHOOP_CLIENT_ID and WHOOP_CLIENT_SECRET to Vercel environment variables\\n2. Redeploy your application\\n3. Refresh this page\\n\\nYour dashboard will then show your actual WHOOP metrics!', 'system');
+                        
+                        console.log('WHOOP credentials missing:', result.message);
+                    }} else if (result.data && result.data.metrics) {{
                         const metrics = result.data.metrics;
-                        document.getElementById('hrv').textContent = metrics.hrv || '42';
-                        document.getElementById('recovery').textContent = (metrics.recovery || 85) + '%';
-                        document.getElementById('sleep').textContent = metrics.sleep_score || '8.2';
-                        document.getElementById('strain').textContent = metrics.strain || '12.5';
+                        document.getElementById('hrv').textContent = metrics.hrv || '--';
+                        document.getElementById('recovery').textContent = (metrics.recovery || 0) + '%';
+                        document.getElementById('sleep').textContent = metrics.sleep_score || '--';
+                        document.getElementById('strain').textContent = metrics.strain || '--';
+                        
+                        // Show data source
+                        console.log('Loaded WHOOP data for tgaraouy:', metrics);
+                        console.log('Data status:', result.status);
                     }} else {{
-                        // Use tgaraouy's simulated data
-                        document.getElementById('hrv').textContent = '45';
-                        document.getElementById('recovery').textContent = '87%';
-                        document.getElementById('sleep').textContent = '8.5';
-                        document.getElementById('strain').textContent = '11.2';
+                        // No data available
+                        document.getElementById('hrv').textContent = '--';
+                        document.getElementById('recovery').textContent = '--';
+                        document.getElementById('sleep').textContent = '--';
+                        document.getElementById('strain').textContent = '--';
+                        console.log('No WHOOP data available for tgaraouy');
                     }}
                 }} catch (error) {{
-                    // Use tgaraouy's simulated data
-                    document.getElementById('hrv').textContent = '45';
-                    document.getElementById('recovery').textContent = '87%';
-                    document.getElementById('sleep').textContent = '8.5';
-                    document.getElementById('strain').textContent = '11.2';
+                    // Error loading data
+                    document.getElementById('hrv').textContent = '--';
+                    document.getElementById('recovery').textContent = '--';
+                    document.getElementById('sleep').textContent = '--';
+                    document.getElementById('strain').textContent = '--';
+                    console.error('Error loading WHOOP data:', error);
                 }}
             }}
 
