@@ -18,6 +18,7 @@ from user_containers import container_manager
 from onboarding import onboarding_flow
 from automation_engine import get_automation_engine
 from health_concierge import get_health_concierge
+from service_catalog import service_catalog
 from whoop_integration import get_whoop_integration
 
 # Load environment variables
@@ -1480,6 +1481,242 @@ async def get_health_tools_options():
                     // Store selected tools and continue
                     localStorage.setItem('selected_health_tools', JSON.stringify(selectedTools));
                     window.location.href = '/onboarding/service-configuration';
+                }}
+            }}
+        </script>
+    </body>
+    </html>
+    """
+
+@app.get("/onboarding/service-configuration", response_class=HTMLResponse)
+async def get_service_configuration():
+    """Get service configuration with HTML interface"""
+    catalog_data = service_catalog.get_all_services()
+    hybrid_templates = service_catalog.get_hybrid_templates()
+    
+    # Generate service cards HTML
+    service_cards_html = ""
+    for category, services in catalog_data["services"].items():
+        for service in services:
+            service_id = service["service_id"]
+            # Add icon based on category
+            icon_map = {
+                "Fitness & Performance": "💪",
+                "Recovery & Sleep": "😴",
+                "Nutrition & Wellness": "🥗",
+                "Longevity & Optimization": "🧬",
+                "Data & Analytics": "📊",
+                "Coaching & Guidance": "🎯",
+                "Safety & Monitoring": "🛡️"
+            }
+            icon = icon_map.get(service["category"], "🔧")
+            
+            service_cards_html += f'''
+                        <div class="service-card" onclick="toggleService('{service_id}')" id="service-{service_id}">
+                            <div class="service-header">
+                                <h3><span class="icon">{icon}</span>{service["name"]}</h3>
+                                <div class="service-category">{service["category"]}</div>
+                            </div>
+                            <p class="service-description">{service["description"]}</p>
+                            <div class="service-priority">
+                                <label>Priority:</label>
+                                <select id="priority-{service_id}" onchange="updatePriority('{service_id}')">
+                                    <option value="high">High</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="low">Low</option>
+                                    <option value="disabled">Disabled</option>
+                                </select>
+                            </div>
+                        </div>
+            '''
+    
+    # Generate hybrid template options
+    template_options_html = ""
+    for template_id, template in hybrid_templates.items():
+        template_options_html += f'''
+                    <div class="template-option" onclick="selectTemplate('{template_id}')" id="template-{template_id}">
+                        <h4>{template_id}</h4>
+                        <p>{template["description"]}</p>
+                        <div class="template-services">
+                            {len(template["services"])} services included
+                        </div>
+                    </div>
+        '''
+    
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Vibespan.ai - Service Configuration</title>
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }}
+            .container {{ background: white; border-radius: 20px; box-shadow: 0 30px 60px rgba(0,0,0,0.3); max-width: 1200px; width: 100%; overflow: hidden; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }}
+            .header h1 {{ font-size: 2.5rem; margin-bottom: 10px; }}
+            .content {{ padding: 40px; }}
+            .step-indicator {{ display: flex; justify-content: center; margin-bottom: 40px; flex-wrap: wrap; }}
+            .step {{ width: 40px; height: 40px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center; margin: 5px; font-weight: 600; color: #666; }}
+            .step.active {{ background: #667eea; color: white; }}
+            .step.completed {{ background: #28a745; color: white; }}
+            .tabs {{ display: flex; margin-bottom: 30px; border-bottom: 2px solid #e9ecef; }}
+            .tab {{ padding: 15px 30px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s ease; }}
+            .tab.active {{ border-bottom-color: #667eea; color: #667eea; font-weight: 600; }}
+            .tab-content {{ display: none; }}
+            .tab-content.active {{ display: block; }}
+            .services-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin: 30px 0; }}
+            .service-card {{ background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 15px; padding: 25px; cursor: pointer; transition: all 0.3s ease; }}
+            .service-card:hover {{ border-color: #667eea; transform: translateY(-3px); }}
+            .service-card.selected {{ border-color: #667eea; background: #f0f4ff; }}
+            .service-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }}
+            .service-header h3 {{ color: #333; display: flex; align-items: center; font-size: 1.2rem; }}
+            .service-header .icon {{ font-size: 1.5rem; margin-right: 10px; }}
+            .service-category {{ background: #e9ecef; color: #666; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }}
+            .service-description {{ color: #666; font-size: 0.9rem; line-height: 1.5; margin-bottom: 15px; }}
+            .service-priority {{ display: flex; align-items: center; gap: 10px; }}
+            .service-priority label {{ font-weight: 600; color: #333; }}
+            .service-priority select {{ padding: 5px 10px; border: 1px solid #ddd; border-radius: 5px; }}
+            .templates-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 30px 0; }}
+            .template-option {{ background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 15px; padding: 25px; cursor: pointer; transition: all 0.3s ease; }}
+            .template-option:hover {{ border-color: #667eea; transform: translateY(-3px); }}
+            .template-option.selected {{ border-color: #667eea; background: #f0f4ff; }}
+            .template-option h4 {{ color: #333; margin-bottom: 10px; }}
+            .template-option p {{ color: #666; font-size: 0.9rem; line-height: 1.5; margin-bottom: 15px; }}
+            .template-services {{ background: #667eea; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; }}
+            .btn {{ padding: 15px 30px; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-block; text-align: center; margin: 10px; }}
+            .btn-primary {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); }}
+            .btn-primary:hover {{ transform: translateY(-3px); box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4); }}
+            .btn-secondary {{ background: transparent; color: #667eea; border: 2px solid #667eea; }}
+            .btn-secondary:hover {{ background: #667eea; color: white; }}
+            .btn:disabled {{ opacity: 0.5; cursor: not-allowed; }}
+            .cta-buttons {{ display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }}
+            .selected-count {{ text-align: center; margin: 20px 0; color: #667eea; font-weight: 600; }}
+            .progress-info {{ background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }}
+            .progress-info h3 {{ color: #333; margin-bottom: 10px; }}
+            .progress-info p {{ color: #666; margin-bottom: 5px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>⚙️ Configure Your Services</h1>
+                <p>Choose your wellness services and set priorities</p>
+            </div>
+            
+            <div class="content">
+                <div class="step-indicator">
+                    <div class="step completed">1</div>
+                    <div class="step completed">2</div>
+                    <div class="step completed">3</div>
+                    <div class="step completed">4</div>
+                    <div class="step active">5</div>
+                    <div class="step">6</div>
+                    <div class="step">7</div>
+                    <div class="step">8</div>
+                    <div class="step">9</div>
+                </div>
+
+                <div class="progress-info">
+                    <h3>Step 5 of 9: Service Configuration</h3>
+                    <p>Select and configure your wellness services with custom priorities</p>
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('individual')">Individual Services</div>
+                    <div class="tab" onclick="switchTab('templates')">Hybrid Templates</div>
+                </div>
+
+                <div id="individual-tab" class="tab-content active">
+                    <div class="services-grid">
+                        {service_cards_html}
+                    </div>
+                </div>
+
+                <div id="templates-tab" class="tab-content">
+                    <div class="templates-grid">
+                        {template_options_html}
+                    </div>
+                </div>
+
+                <div class="selected-count" id="selected-count">
+                    Select at least one service to continue
+                </div>
+
+                <div class="cta-buttons">
+                    <button class="btn btn-primary" id="continue-btn" onclick="continueToNext()" disabled>
+                        Continue to Data Preferences →
+                    </button>
+                    <a href="/onboarding/health-tools" class="btn btn-secondary">
+                        ← Back
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let selectedServices = {{}};
+            let selectedTemplate = null;
+            
+            function switchTab(tabName) {{
+                // Hide all tab contents
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                
+                // Show selected tab
+                document.getElementById(tabName + '-tab').classList.add('active');
+                event.target.classList.add('active');
+            }}
+            
+            function toggleService(serviceId) {{
+                const card = document.getElementById('service-' + serviceId);
+                const priority = document.getElementById('priority-' + serviceId).value;
+                
+                if (selectedServices[serviceId]) {{
+                    delete selectedServices[serviceId];
+                    card.classList.remove('selected');
+                }} else {{
+                    selectedServices[serviceId] = {{ priority: priority, enabled: true }};
+                    card.classList.add('selected');
+                }}
+                
+                updateUI();
+            }}
+            
+            function updatePriority(serviceId) {{
+                if (selectedServices[serviceId]) {{
+                    selectedServices[serviceId].priority = document.getElementById('priority-' + serviceId).value;
+                }}
+            }}
+            
+            function selectTemplate(templateId) {{
+                selectedTemplate = templateId;
+                document.querySelectorAll('.template-option').forEach(option => option.classList.remove('selected'));
+                document.getElementById('template-' + templateId).classList.add('selected');
+                updateUI();
+            }}
+            
+            function updateUI() {{
+                const serviceCount = Object.keys(selectedServices).length;
+                const countEl = document.getElementById('selected-count');
+                const continueBtn = document.getElementById('continue-btn');
+                
+                if (serviceCount === 0 && !selectedTemplate) {{
+                    countEl.textContent = 'Select at least one service or template to continue';
+                    continueBtn.disabled = true;
+                }} else {{
+                    countEl.textContent = `${{serviceCount}} service${{serviceCount > 1 ? 's' : ''}} selected`;
+                    continueBtn.disabled = false;
+                }}
+            }}
+            
+            function continueToNext() {{
+                if (Object.keys(selectedServices).length > 0 || selectedTemplate) {{
+                    // Store selected services and continue
+                    localStorage.setItem('selected_services', JSON.stringify(selectedServices));
+                    localStorage.setItem('selected_template', selectedTemplate);
+                    window.location.href = '/onboarding/data-preferences';
                 }}
             }}
         </script>
