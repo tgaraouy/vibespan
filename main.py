@@ -1732,6 +1732,274 @@ async def get_service_catalog():
         "service_catalog": onboarding_flow.get_service_catalog()
     }
 
+@app.get("/onboarding/data-preferences", response_class=HTMLResponse)
+async def get_data_preferences():
+    """Get data preferences configuration with HTML interface"""
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Vibespan.ai - Data Preferences</title>
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }}
+            .container {{ background: white; border-radius: 20px; box-shadow: 0 30px 60px rgba(0,0,0,0.3); max-width: 1000px; width: 100%; overflow: hidden; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }}
+            .header h1 {{ font-size: 2.5rem; margin-bottom: 10px; }}
+            .content {{ padding: 40px; }}
+            .step-indicator {{ display: flex; justify-content: center; margin-bottom: 40px; flex-wrap: wrap; }}
+            .step {{ width: 40px; height: 40px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center; margin: 5px; font-weight: 600; color: #666; }}
+            .step.active {{ background: #667eea; color: white; }}
+            .step.completed {{ background: #28a745; color: white; }}
+            .preferences-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; margin: 30px 0; }}
+            .preference-card {{ background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 15px; padding: 25px; transition: all 0.3s ease; }}
+            .preference-card:hover {{ border-color: #667eea; transform: translateY(-3px); }}
+            .preference-card h3 {{ color: #333; margin-bottom: 15px; display: flex; align-items: center; font-size: 1.3rem; }}
+            .preference-card .icon {{ font-size: 1.8rem; margin-right: 12px; }}
+            .preference-card p {{ color: #666; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; }}
+            .preference-options {{ display: flex; flex-direction: column; gap: 15px; }}
+            .option-group {{ display: flex; align-items: center; justify-content: space-between; padding: 15px; background: white; border-radius: 10px; border: 1px solid #e9ecef; }}
+            .option-group:hover {{ border-color: #667eea; }}
+            .option-label {{ font-weight: 600; color: #333; }}
+            .option-controls {{ display: flex; align-items: center; gap: 10px; }}
+            .toggle {{ position: relative; width: 50px; height: 25px; background: #ddd; border-radius: 25px; cursor: pointer; transition: background 0.3s; }}
+            .toggle.active {{ background: #667eea; }}
+            .toggle::after {{ content: ''; position: absolute; top: 2px; left: 2px; width: 21px; height: 21px; background: white; border-radius: 50%; transition: transform 0.3s; }}
+            .toggle.active::after {{ transform: translateX(25px); }}
+            .select {{ padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; background: white; }}
+            .btn {{ padding: 15px 30px; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-block; text-align: center; margin: 10px; }}
+            .btn-primary {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); }}
+            .btn-primary:hover {{ transform: translateY(-3px); box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4); }}
+            .btn-secondary {{ background: transparent; color: #667eea; border: 2px solid #667eea; }}
+            .btn-secondary:hover {{ background: #667eea; color: white; }}
+            .btn:disabled {{ opacity: 0.5; cursor: not-allowed; }}
+            .cta-buttons {{ display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }}
+            .progress-info {{ background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }}
+            .progress-info h3 {{ color: #333; margin-bottom: 10px; }}
+            .progress-info p {{ color: #666; margin-bottom: 5px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>⚙️ Data Preferences</h1>
+                <p>Configure how your wellness data is collected and used</p>
+            </div>
+            
+            <div class="content">
+                <div class="step-indicator">
+                    <div class="step completed">1</div>
+                    <div class="step completed">2</div>
+                    <div class="step completed">3</div>
+                    <div class="step completed">4</div>
+                    <div class="step completed">5</div>
+                    <div class="step active">6</div>
+                    <div class="step">7</div>
+                    <div class="step">8</div>
+                    <div class="step">9</div>
+                </div>
+
+                <div class="progress-info">
+                    <h3>Step 6 of 9: Data Preferences</h3>
+                    <p>Customize your data collection and privacy settings</p>
+                </div>
+
+                <div class="preferences-grid">
+                    <div class="preference-card">
+                        <h3><span class="icon">📊</span>Data Collection</h3>
+                        <p>Choose how frequently and what type of data to collect</p>
+                        <div class="preference-options">
+                            <div class="option-group">
+                                <span class="option-label">Real-time Monitoring</span>
+                                <div class="option-controls">
+                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                </div>
+                            </div>
+                            <div class="option-group">
+                                <span class="option-label">Data Collection Frequency</span>
+                                <div class="option-controls">
+                                    <select class="select" id="collection-frequency">
+                                        <option value="continuous">Continuous</option>
+                                        <option value="hourly" selected>Hourly</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="option-group">
+                                <span class="option-label">Include Sleep Data</span>
+                                <div class="option-controls">
+                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                </div>
+                            </div>
+                            <div class="option-group">
+                                <span class="option-label">Include Activity Data</span>
+                                <div class="option-controls">
+                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="preference-card">
+                        <h3><span class="icon">🔒</span>Privacy & Security</h3>
+                        <p>Control how your data is stored and shared</p>
+                        <div class="preference-options">
+                            <div class="option-group">
+                                <span class="option-label">Data Encryption</span>
+                                <div class="option-controls">
+                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                </div>
+                            </div>
+                            <div class="option-group">
+                                <span class="option-label">Anonymous Analytics</span>
+                                <div class="option-controls">
+                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                </div>
+                            </div>
+                            <div class="option-group">
+                                <span class="option-label">Data Retention Period</span>
+                                <div class="option-controls">
+                                    <select class="select" id="retention-period">
+                                        <option value="1year">1 Year</option>
+                                        <option value="2years">2 Years</option>
+                                        <option value="3years" selected>3 Years</option>
+                                        <option value="indefinite">Indefinite</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="option-group">
+                                <span class="option-label">Export Data Access</span>
+                                <div class="option-controls">
+                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="preference-card">
+                        <h3><span class="icon">🔔</span>Notifications</h3>
+                        <p>Set up alerts and reminders for your wellness journey</p>
+                        <div class="preference-options">
+                            <div class="option-group">
+                                <span class="option-label">Daily Reminders</span>
+                                <div class="option-controls">
+                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                </div>
+                            </div>
+                            <div class="option-group">
+                                <span class="option-label">Health Alerts</span>
+                                <div class="option-controls">
+                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                </div>
+                            </div>
+                            <div class="option-group">
+                                <span class="option-label">Weekly Reports</span>
+                                <div class="option-controls">
+                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                </div>
+                            </div>
+                            <div class="option-group">
+                                <span class="option-label">Goal Milestones</span>
+                                <div class="option-controls">
+                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="preference-card">
+                        <h3><span class="icon">🤖</span>AI Personalization</h3>
+                        <p>Configure how AI learns and adapts to your preferences</p>
+                        <div class="preference-options">
+                            <div class="option-group">
+                                <span class="option-label">Learning Mode</span>
+                                <div class="option-controls">
+                                    <select class="select" id="learning-mode">
+                                        <option value="conservative">Conservative</option>
+                                        <option value="balanced" selected>Balanced</option>
+                                        <option value="aggressive">Aggressive</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="option-group">
+                                <span class="option-label">Pattern Detection</span>
+                                <div class="option-controls">
+                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                </div>
+                            </div>
+                            <div class="option-group">
+                                <span class="option-label">Predictive Insights</span>
+                                <div class="option-controls">
+                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                </div>
+                            </div>
+                            <div class="option-group">
+                                <span class="option-label">Auto-optimization</span>
+                                <div class="option-controls">
+                                    <div class="toggle active" onclick="toggleOption(this)"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cta-buttons">
+                    <button class="btn btn-primary" onclick="continueToNext()">
+                        Continue to Template Selection →
+                    </button>
+                    <a href="/onboarding/service-configuration" class="btn btn-secondary">
+                        ← Back
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function toggleOption(element) {{
+                element.classList.toggle('active');
+            }}
+            
+            function continueToNext() {{
+                // Collect all preferences
+                const preferences = {{
+                    dataCollection: {{
+                        realTimeMonitoring: document.querySelector('.preference-card:nth-child(1) .toggle').classList.contains('active'),
+                        frequency: document.getElementById('collection-frequency').value,
+                        includeSleep: document.querySelector('.preference-card:nth-child(1) .toggle:nth-child(2)').classList.contains('active'),
+                        includeActivity: document.querySelector('.preference-card:nth-child(1) .toggle:nth-child(3)').classList.contains('active')
+                    }},
+                    privacy: {{
+                        encryption: document.querySelector('.preference-card:nth-child(2) .toggle').classList.contains('active'),
+                        anonymousAnalytics: document.querySelector('.preference-card:nth-child(2) .toggle:nth-child(2)').classList.contains('active'),
+                        retentionPeriod: document.getElementById('retention-period').value,
+                        exportAccess: document.querySelector('.preference-card:nth-child(2) .toggle:nth-child(4)').classList.contains('active')
+                    }},
+                    notifications: {{
+                        dailyReminders: document.querySelector('.preference-card:nth-child(3) .toggle').classList.contains('active'),
+                        healthAlerts: document.querySelector('.preference-card:nth-child(3) .toggle:nth-child(2)').classList.contains('active'),
+                        weeklyReports: document.querySelector('.preference-card:nth-child(3) .toggle:nth-child(3)').classList.contains('active'),
+                        goalMilestones: document.querySelector('.preference-card:nth-child(3) .toggle:nth-child(4)').classList.contains('active')
+                    }},
+                    aiPersonalization: {{
+                        learningMode: document.getElementById('learning-mode').value,
+                        patternDetection: document.querySelector('.preference-card:nth-child(4) .toggle').classList.contains('active'),
+                        predictiveInsights: document.querySelector('.preference-card:nth-child(4) .toggle:nth-child(2)').classList.contains('active'),
+                        autoOptimization: document.querySelector('.preference-card:nth-child(4) .toggle:nth-child(3)').classList.contains('active')
+                    }}
+                }};
+                
+                // Store preferences and continue
+                localStorage.setItem('data_preferences', JSON.stringify(preferences));
+                window.location.href = '/onboarding/template-selection';
+            }}
+        </script>
+    </body>
+    </html>
+    """
+
 @app.get("/onboarding/hybrid-templates")
 async def get_hybrid_templates():
     """Get hybrid template combinations"""
