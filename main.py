@@ -2259,8 +2259,8 @@ async def get_container_provisioning():
             .provisioning-title {{ font-size: 2rem; color: #333; margin-bottom: 20px; }}
             .provisioning-description {{ font-size: 1.2rem; color: #666; margin-bottom: 40px; line-height: 1.6; }}
             .progress-bar {{ background: #e9ecef; border-radius: 25px; height: 10px; margin: 30px 0; overflow: hidden; }}
-            .progress-fill {{ background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; border-radius: 25px; animation: progress 3s ease-in-out; }}
-            @keyframes progress {{ 0% {{ width: 0%; }} 100% {{ width: 100%; }} }}
+            .progress-fill {{ background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; border-radius: 25px; transition: width 0.5s ease-in-out; }}
+            .progress-text {{ text-align: center; margin-top: 10px; font-weight: 600; color: #667eea; font-size: 1.1rem; }}
             .provisioning-steps {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 40px 0; }}
             .provisioning-step {{ background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; }}
             .provisioning-step.completed {{ border-color: #28a745; background: #d4edda; }}
@@ -2322,8 +2322,9 @@ async def get_container_provisioning():
                     </p>
                     
                     <div class="progress-bar">
-                        <div class="progress-fill"></div>
+                        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
                     </div>
+                    <div class="progress-text" id="progress-text">0% Complete</div>
                     
                     <div class="provisioning-steps">
                         <div class="provisioning-step completed">
@@ -2390,23 +2391,41 @@ async def get_container_provisioning():
         <script>
             let provisioningComplete = false;
             
-            // Simulate provisioning process
+            // Simulate provisioning process with percentage
             function startProvisioning() {{
                 const steps = document.querySelectorAll('.provisioning-step');
                 const containerId = document.getElementById('container-id');
                 const status = document.getElementById('status');
                 const continueBtn = document.getElementById('continue-btn');
                 const loading = document.getElementById('loading');
+                const progressFill = document.getElementById('progress-fill');
+                const progressText = document.getElementById('progress-text');
                 
                 // Generate container ID
                 const id = 'vibespan_' + Math.random().toString(36).substr(2, 9);
                 containerId.textContent = id;
                 
+                // Define step percentages and descriptions
+                const stepProgress = [
+                    {{ percent: 25, text: "25% - Container Created" }},
+                    {{ percent: 50, text: "50% - Agents Deployed" }},
+                    {{ percent: 75, text: "75% - Services Configured" }},
+                    {{ percent: 100, text: "100% - Data Sources Connected" }}
+                ];
+                
                 // Simulate step completion
                 let currentStep = 2; // Start from step 3 (index 2)
+                let progressIndex = 0;
                 
                 const stepInterval = setInterval(() => {{
                     if (currentStep < steps.length) {{
+                        // Update progress
+                        if (progressIndex < stepProgress.length) {{
+                            progressFill.style.width = stepProgress[progressIndex].percent + '%';
+                            progressText.textContent = stepProgress[progressIndex].text;
+                            progressIndex++;
+                        }}
+                        
                         // Mark current step as completed
                         steps[currentStep - 1].classList.remove('active');
                         steps[currentStep - 1].classList.add('completed');
