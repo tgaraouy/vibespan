@@ -2232,6 +2232,223 @@ async def get_template_selection():
     </html>
     """
 
+@app.get("/onboarding/container-provisioning", response_class=HTMLResponse)
+async def get_container_provisioning():
+    """Get container provisioning with HTML interface"""
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Vibespan.ai - Container Provisioning</title>
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }}
+            .container {{ background: white; border-radius: 20px; box-shadow: 0 30px 60px rgba(0,0,0,0.3); max-width: 1000px; width: 100%; overflow: hidden; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }}
+            .header h1 {{ font-size: 2.5rem; margin-bottom: 10px; }}
+            .content {{ padding: 40px; }}
+            .step-indicator {{ display: flex; justify-content: center; margin-bottom: 40px; flex-wrap: wrap; }}
+            .step {{ width: 40px; height: 40px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center; margin: 5px; font-weight: 600; color: #666; }}
+            .step.active {{ background: #667eea; color: white; }}
+            .step.completed {{ background: #28a745; color: white; }}
+            .provisioning-container {{ text-align: center; }}
+            .provisioning-icon {{ font-size: 4rem; margin-bottom: 20px; animation: pulse 2s infinite; }}
+            @keyframes pulse {{ 0% {{ transform: scale(1); }} 50% {{ transform: scale(1.1); }} 100% {{ transform: scale(1); }} }}
+            .provisioning-title {{ font-size: 2rem; color: #333; margin-bottom: 20px; }}
+            .provisioning-description {{ font-size: 1.2rem; color: #666; margin-bottom: 40px; line-height: 1.6; }}
+            .progress-bar {{ background: #e9ecef; border-radius: 25px; height: 10px; margin: 30px 0; overflow: hidden; }}
+            .progress-fill {{ background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; border-radius: 25px; animation: progress 3s ease-in-out; }}
+            @keyframes progress {{ 0% {{ width: 0%; }} 100% {{ width: 100%; }} }}
+            .provisioning-steps {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 40px 0; }}
+            .provisioning-step {{ background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; }}
+            .provisioning-step.completed {{ border-color: #28a745; background: #d4edda; }}
+            .provisioning-step.active {{ border-color: #667eea; background: #f0f4ff; }}
+            .step-icon {{ font-size: 2rem; margin-bottom: 15px; }}
+            .step-title {{ font-size: 1.2rem; font-weight: 600; color: #333; margin-bottom: 10px; }}
+            .step-description {{ font-size: 0.9rem; color: #666; line-height: 1.4; }}
+            .container-info {{ background: #f8f9fa; border-radius: 15px; padding: 30px; margin: 30px 0; text-align: left; }}
+            .container-info h3 {{ color: #333; margin-bottom: 20px; font-size: 1.5rem; }}
+            .info-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }}
+            .info-item {{ background: white; border-radius: 10px; padding: 20px; border: 1px solid #e9ecef; }}
+            .info-label {{ font-weight: 600; color: #667eea; margin-bottom: 5px; }}
+            .info-value {{ color: #333; font-size: 1.1rem; }}
+            .btn {{ padding: 15px 30px; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-block; text-align: center; margin: 10px; }}
+            .btn-primary {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); }}
+            .btn-primary:hover {{ transform: translateY(-3px); box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4); }}
+            .btn-secondary {{ background: transparent; color: #667eea; border: 2px solid #667eea; }}
+            .btn-secondary:hover {{ background: #667eea; color: white; }}
+            .btn:disabled {{ opacity: 0.5; cursor: not-allowed; }}
+            .cta-buttons {{ display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }}
+            .progress-info {{ background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }}
+            .progress-info h3 {{ color: #333; margin-bottom: 10px; }}
+            .progress-info p {{ color: #666; margin-bottom: 5px; }}
+            .loading {{ display: none; }}
+            .loading.show {{ display: block; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🚀 Provisioning Your Container</h1>
+                <p>Setting up your personalized wellness environment</p>
+            </div>
+            
+            <div class="content">
+                <div class="step-indicator">
+                    <div class="step completed">1</div>
+                    <div class="step completed">2</div>
+                    <div class="step completed">3</div>
+                    <div class="step completed">4</div>
+                    <div class="step completed">5</div>
+                    <div class="step completed">6</div>
+                    <div class="step completed">7</div>
+                    <div class="step active">8</div>
+                    <div class="step">9</div>
+                </div>
+
+                <div class="progress-info">
+                    <h3>Step 8 of 9: Container Provisioning</h3>
+                    <p>Creating your personalized wellness container with all selected configurations</p>
+                </div>
+
+                <div class="provisioning-container">
+                    <div class="provisioning-icon">⚙️</div>
+                    <h2 class="provisioning-title">Provisioning Your Wellness Container</h2>
+                    <p class="provisioning-description">
+                        We're setting up your personalized wellness environment with all your selected goals, 
+                        tools, services, and preferences. This may take a few moments.
+                    </p>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    
+                    <div class="provisioning-steps">
+                        <div class="provisioning-step completed">
+                            <div class="step-icon">✅</div>
+                            <div class="step-title">Container Created</div>
+                            <div class="step-description">Your isolated wellness environment is ready</div>
+                        </div>
+                        <div class="provisioning-step completed">
+                            <div class="step-icon">✅</div>
+                            <div class="step-title">Agents Deployed</div>
+                            <div class="step-description">AI agents are being configured and deployed</div>
+                        </div>
+                        <div class="provisioning-step active">
+                            <div class="step-icon">⚙️</div>
+                            <div class="step-title">Services Configured</div>
+                            <div class="step-description">Setting up your selected wellness services</div>
+                        </div>
+                        <div class="provisioning-step">
+                            <div class="step-icon">⏳</div>
+                            <div class="step-title">Data Sources</div>
+                            <div class="step-description">Connecting your health tools and data sources</div>
+                        </div>
+                    </div>
+                    
+                    <div class="container-info">
+                        <h3>Your Container Configuration</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Container ID</div>
+                                <div class="info-value" id="container-id">Generating...</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">User ID</div>
+                                <div class="info-value" id="user-id">tgaraouy</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Subdomain</div>
+                                <div class="info-value" id="subdomain">tgaraouy.vibespan.ai</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Status</div>
+                                <div class="info-value" id="status">Provisioning</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="loading" id="loading">
+                        <div class="provisioning-icon">🔄</div>
+                        <p>Please wait while we complete the setup...</p>
+                    </div>
+                </div>
+
+                <div class="cta-buttons">
+                    <button class="btn btn-primary" id="continue-btn" onclick="continueToNext()" style="display: none;">
+                        Continue to Dashboard Setup →
+                    </button>
+                    <a href="/onboarding/template-selection" class="btn btn-secondary">
+                        ← Back
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let provisioningComplete = false;
+            
+            // Simulate provisioning process
+            function startProvisioning() {{
+                const steps = document.querySelectorAll('.provisioning-step');
+                const containerId = document.getElementById('container-id');
+                const status = document.getElementById('status');
+                const continueBtn = document.getElementById('continue-btn');
+                const loading = document.getElementById('loading');
+                
+                // Generate container ID
+                const id = 'vibespan_' + Math.random().toString(36).substr(2, 9);
+                containerId.textContent = id;
+                
+                // Simulate step completion
+                let currentStep = 2; // Start from step 3 (index 2)
+                
+                const stepInterval = setInterval(() => {{
+                    if (currentStep < steps.length) {{
+                        // Mark current step as completed
+                        steps[currentStep - 1].classList.remove('active');
+                        steps[currentStep - 1].classList.add('completed');
+                        steps[currentStep - 1].querySelector('.step-icon').textContent = '✅';
+                        
+                        // Activate next step
+                        if (currentStep < steps.length) {{
+                            steps[currentStep].classList.add('active');
+                        }}
+                        
+                        currentStep++;
+                    }} else {{
+                        // All steps completed
+                        clearInterval(stepInterval);
+                        status.textContent = 'Active';
+                        status.style.color = '#28a745';
+                        provisioningComplete = true;
+                        continueBtn.style.display = 'inline-block';
+                        loading.classList.add('show');
+                        
+                        // Store container info
+                        localStorage.setItem('container_id', id);
+                        localStorage.setItem('provisioning_complete', 'true');
+                    }}
+                }}, 2000);
+            }}
+            
+            function continueToNext() {{
+                if (provisioningComplete) {{
+                    window.location.href = '/onboarding/dashboard-setup';
+                }}
+            }}
+            
+            // Start provisioning when page loads
+            window.addEventListener('load', () => {{
+                setTimeout(startProvisioning, 1000);
+            }});
+        </script>
+    </body>
+    </html>
+    """
+
 @app.get("/onboarding/hybrid-templates")
 async def get_hybrid_templates():
     """Get hybrid template combinations"""
