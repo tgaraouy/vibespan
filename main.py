@@ -2444,7 +2444,7 @@ async def get_container_provisioning():
                         status.style.color = '#28a745';
                         provisioningComplete = true;
                         continueBtn.style.display = 'inline-block';
-                        loading.classList.add('show');
+                        loading.style.display = 'none'; // Hide the loading message
                         
                         // Store container info
                         localStorage.setItem('container_id', id);
@@ -2462,6 +2462,160 @@ async def get_container_provisioning():
             // Start provisioning when page loads
             window.addEventListener('load', () => {{
                 setTimeout(startProvisioning, 1000);
+            }});
+        </script>
+    </body>
+    </html>
+    """
+
+@app.get("/onboarding/dashboard-setup", response_class=HTMLResponse)
+async def get_dashboard_setup():
+    """Get dashboard setup with HTML interface"""
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Vibespan.ai - Dashboard Setup</title>
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }}
+            .container {{ background: white; border-radius: 20px; box-shadow: 0 30px 60px rgba(0,0,0,0.3); max-width: 1000px; width: 100%; overflow: hidden; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }}
+            .header h1 {{ font-size: 2.5rem; margin-bottom: 10px; }}
+            .content {{ padding: 40px; }}
+            .step-indicator {{ display: flex; justify-content: center; margin-bottom: 40px; flex-wrap: wrap; }}
+            .step {{ width: 40px; height: 40px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center; margin: 5px; font-weight: 600; color: #666; }}
+            .step.active {{ background: #667eea; color: white; }}
+            .step.completed {{ background: #28a745; color: white; }}
+            .success-container {{ text-align: center; }}
+            .success-icon {{ font-size: 4rem; margin-bottom: 20px; animation: bounce 2s infinite; }}
+            @keyframes bounce {{ 0%, 20%, 50%, 80%, 100% {{ transform: translateY(0); }} 40% {{ transform: translateY(-10px); }} 60% {{ transform: translateY(-5px); }} }}
+            .success-title {{ font-size: 2rem; color: #28a745; margin-bottom: 20px; }}
+            .success-description {{ font-size: 1.2rem; color: #666; margin-bottom: 40px; line-height: 1.6; }}
+            .dashboard-preview {{ background: #f8f9fa; border-radius: 15px; padding: 30px; margin: 30px 0; text-align: left; }}
+            .dashboard-preview h3 {{ color: #333; margin-bottom: 20px; font-size: 1.5rem; }}
+            .preview-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }}
+            .preview-item {{ background: white; border-radius: 10px; padding: 20px; border: 1px solid #e9ecef; text-align: center; }}
+            .preview-icon {{ font-size: 2rem; margin-bottom: 10px; }}
+            .preview-label {{ font-weight: 600; color: #667eea; margin-bottom: 5px; }}
+            .preview-value {{ color: #333; font-size: 1.1rem; }}
+            .container-info {{ background: #f8f9fa; border-radius: 15px; padding: 30px; margin: 30px 0; text-align: left; }}
+            .container-info h3 {{ color: #333; margin-bottom: 20px; font-size: 1.5rem; }}
+            .info-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }}
+            .info-item {{ background: white; border-radius: 10px; padding: 20px; border: 1px solid #e9ecef; }}
+            .info-label {{ font-weight: 600; color: #667eea; margin-bottom: 5px; }}
+            .info-value {{ color: #333; font-size: 1.1rem; }}
+            .btn {{ padding: 15px 30px; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-block; text-align: center; margin: 10px; }}
+            .btn-primary {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); }}
+            .btn-primary:hover {{ transform: translateY(-3px); box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4); }}
+            .btn-secondary {{ background: transparent; color: #667eea; border: 2px solid #667eea; }}
+            .btn-secondary:hover {{ background: #667eea; color: white; }}
+            .cta-buttons {{ display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }}
+            .progress-info {{ background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }}
+            .progress-info h3 {{ color: #333; margin-bottom: 10px; }}
+            .progress-info p {{ color: #666; margin-bottom: 5px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🎉 Setup Complete!</h1>
+                <p>Your personalized wellness dashboard is ready</p>
+            </div>
+            
+            <div class="content">
+                <div class="step-indicator">
+                    <div class="step completed">1</div>
+                    <div class="step completed">2</div>
+                    <div class="step completed">3</div>
+                    <div class="step completed">4</div>
+                    <div class="step completed">5</div>
+                    <div class="step completed">6</div>
+                    <div class="step completed">7</div>
+                    <div class="step completed">8</div>
+                    <div class="step active">9</div>
+                </div>
+
+                <div class="progress-info">
+                    <h3>Step 9 of 9: Dashboard Setup Complete</h3>
+                    <p>Your wellness container is ready and your dashboard is configured</p>
+                </div>
+
+                <div class="success-container">
+                    <div class="success-icon">🎉</div>
+                    <h2 class="success-title">Congratulations!</h2>
+                    <p class="success-description">
+                        Your personalized wellness container has been successfully created and configured. 
+                        Your AI wellness concierge is now ready to help you achieve your health goals.
+                    </p>
+                    
+                    <div class="dashboard-preview">
+                        <h3>Your Wellness Dashboard Preview</h3>
+                        <div class="preview-grid">
+                            <div class="preview-item">
+                                <div class="preview-icon">📊</div>
+                                <div class="preview-label">Health Metrics</div>
+                                <div class="preview-value">Real-time tracking</div>
+                            </div>
+                            <div class="preview-item">
+                                <div class="preview-icon">🤖</div>
+                                <div class="preview-label">AI Concierge</div>
+                                <div class="preview-value">24/7 assistance</div>
+                            </div>
+                            <div class="preview-item">
+                                <div class="preview-icon">⚡</div>
+                                <div class="preview-label">Automation</div>
+                                <div class="preview-value">Set & forget</div>
+                            </div>
+                            <div class="preview-item">
+                                <div class="preview-icon">📱</div>
+                                <div class="preview-label">Data Sources</div>
+                                <div class="preview-value">Connected</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="container-info">
+                        <h3>Your Container Details</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Container ID</div>
+                                <div class="info-value" id="container-id">Loading...</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">User ID</div>
+                                <div class="info-value" id="user-id">tgaraouy</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Subdomain</div>
+                                <div class="info-value" id="subdomain">tgaraouy.vibespan.ai</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Status</div>
+                                <div class="info-value" id="status" style="color: #28a745;">Active</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cta-buttons">
+                    <a href="/dashboard" class="btn btn-primary">
+                        🚀 Go to Your Dashboard
+                    </a>
+                    <a href="/onboarding/container-provisioning" class="btn btn-secondary">
+                        ← Back
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Load container info from localStorage
+            window.addEventListener('load', () => {{
+                const containerId = localStorage.getItem('container_id') || 'vibespan_' + Math.random().toString(36).substr(2, 9);
+                document.getElementById('container-id').textContent = containerId;
             }});
         </script>
     </body>
