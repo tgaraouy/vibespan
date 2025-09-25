@@ -840,6 +840,8 @@ async def whoop_callback(
     error: Optional[str] = Query(None)
 ):
     """Handle WHOOP OAuth2 callback"""
+    print(f"WHOOP Callback - Code: {code}, State: {state}, Error: {error}")
+    
     if error:
         raise HTTPException(status_code=400, detail=f"Authorization error: {error}")
     
@@ -851,10 +853,21 @@ async def whoop_callback(
     if state and state.startswith("tenant_"):
         tenant_id = state.replace("tenant_", "")
     
+    print(f"Using tenant_id: {tenant_id}")
+    
     whoop_integration = get_whoop_integration(tenant_id)
     
+    # Log the credentials for debugging
+    print(f"Client ID: {whoop_integration.client_id}")
+    print(f"Client Secret: {'*' * len(whoop_integration.client_secret) if whoop_integration.client_secret else 'None'}")
+    
     # Exchange code for token
-    token_response = await whoop_integration.exchange_code_for_token(code)
+    try:
+        token_response = await whoop_integration.exchange_code_for_token(code)
+        print(f"Token response: {token_response}")
+    except Exception as e:
+        print(f"Token exchange error: {e}")
+        raise HTTPException(status_code=500, detail=f"Token exchange error: {str(e)}")
     
     if not token_response:
         raise HTTPException(status_code=400, detail="Failed to exchange code for token")

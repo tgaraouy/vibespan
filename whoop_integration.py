@@ -419,6 +419,11 @@ class WhoopIntegration:
                 "client_secret": self.client_secret
             }
             
+            # Log the request details for debugging
+            self.logger.info(f"Token exchange request - URL: {self.token_url}")
+            self.logger.info(f"Token exchange request - Data: {token_data}")
+            self.logger.info(f"Token exchange request - Client ID: {self.client_id}")
+            
             # Create basic auth header
             credentials = f"{self.client_id}:{self.client_secret}"
             encoded_credentials = base64.b64encode(credentials.encode()).decode()
@@ -428,14 +433,19 @@ class WhoopIntegration:
                 "Content-Type": "application/x-www-form-urlencoded"
             }
             
+            self.logger.info(f"Token exchange request - Headers: {headers}")
+            
             async with aiohttp.ClientSession() as session:
                 async with session.post(
                     self.token_url,
                     data=token_data,
                     headers=headers
                 ) as response:
+                    self.logger.info(f"Token exchange response - Status: {response.status}")
+                    
                     if response.status == 200:
                         token_response = await response.json()
+                        self.logger.info(f"Token exchange response - Success: {token_response}")
                         
                         # Calculate expiration time
                         expires_in = token_response.get("expires_in", 3600)
@@ -451,10 +461,12 @@ class WhoopIntegration:
                     else:
                         error_text = await response.text()
                         self.logger.error(f"Token exchange failed: {response.status} - {error_text}")
+                        print(f"WHOOP Token Exchange Error: {response.status} - {error_text}")
                         return None
                         
         except Exception as e:
             self.logger.error(f"Error exchanging code for token: {e}")
+            print(f"WHOOP Token Exchange Exception: {e}")
             return None
     
     async def _store_token(self, token: Dict[str, Any]) -> None:
